@@ -29,9 +29,11 @@ In any doubt, I will be pleased to discuss with you.
 
 + XBMC wiki, ["JSON-RPC API"][1], some general explanations about the API
 + XBMC wiki, ["JSON-RPC API/Examples"][2], the full methods list and description
++ XBMC wiki, ["JSON-RPC API/Examples"][5], json-rpc examples
 + Python docs, ["18.2. json — JSON encoder and decoder"][3], using json in Python
 
 [1]: http://wiki.xbmc.org/?title=JSON-RPC_API
 [2]: http://wiki.xbmc.org/index.php?title=JSON-RPC_API/Examples
 [3]: http://docs.python.org/2/library/json.html
 [4]: http://yatse.leetzone.org/redmine
+[5]: http://wiki.xbmc.org/index.php?title=JSON-RPC_API/Examples
