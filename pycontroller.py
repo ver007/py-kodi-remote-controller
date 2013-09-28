@@ -15,6 +15,7 @@ import argparse
 
 # global constants
 BUFFER_SIZE = 1024
+DISPLAY_NB_LINES = 20
 
 # utilities functions
 
@@ -39,7 +40,22 @@ def call_api(ip, port, command):
     s.close()
     return json.loads(data)
 
+def display_result(ret):
+    '''Display command result for simple methods'''
+    if ret['result'] == 'OK':
+        print 'Command processed successfully'
+    else:
+        print 'Too bad, something went wrong'
+
 # parsers
+def parse_get_albums(line):
+    '''Parse line and return start/end for get_albums'''
+    if len(line) == 0:
+        start = 0
+    else:
+        start = int(line)
+    end = start + DISPLAY_NB_LINES
+    return (start, end)
 
 # process return messages
 
@@ -50,6 +66,38 @@ class XBMCRemote(cmd.Cmd):
     def preloop(self):
         '''Override and used for class variable'''
         (self.xbmc_ip, self.xbmc_port) = get_xbmc_params()
+
+    def do_audio_library(self, line):
+        '''
+        Set of namespace AudioLibrary methods.
+        '''
+        print 'Try help audio_library'
+
+    def do_audio_library_get_albums(self, line):
+        '''
+        Retrieve all albums with criteria.
+        Usage: audio_library_get_albums [start]
+        '''
+        (start, end) = parse_get_albums(line)
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.GetAlbums",
+                "params": { "limits": { "start": start, "end": end } },
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        albums = ret['result']['albums']
+        for album in albums:
+            print ('Album ID: %4i - %s' % (album['albumid'], album['label']))
+
+    def do_audio_library_scan(self, line):
+        '''
+        Scan the audio library.
+        Usage: audio_library_scan
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.Scan",
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        display_result(ret)
 
     def do_gui(self, line):
         '''
@@ -67,11 +115,8 @@ class XBMCRemote(cmd.Cmd):
                 "params": {"title": "PyController", "message":line},
                 "id": 1}
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
-        if ret['result'] == 'OK':
-            print 'Message sent successfully'
-        else:
-            print 'Too bad, something went wrong'
-
+        display_result(ret)
+        
     def do_json(self, line):
         '''
         Set of namespace JSONRPC methods.
