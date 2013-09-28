@@ -5,7 +5,7 @@
 # https://github.com/Arn-O/py-xbmc-remote-controller/blob/master/LICENSE.
 
 '''
-XBMC remote controller based on TCP transport and JSON and using the (cmd) interface.
+XBMC remote controller based on TCP transport, JSON and using the (cmd) interface.
 '''
 
 import socket
@@ -15,6 +15,8 @@ import argparse
 
 # global constants
 BUFFER_SIZE = 1024
+
+# utilities functions
 
 def get_xbmc_params():
     '''Get XBMC sever IP and port'''
@@ -37,6 +39,10 @@ def call_api(ip, port, command):
     s.close()
     return json.loads(data)
 
+# parsers
+
+# process return messages
+
 class XBMCRemote(cmd.Cmd):
         
     '''Subclass of the cmd class'''
@@ -44,6 +50,27 @@ class XBMCRemote(cmd.Cmd):
     def preloop(self):
         '''Override and used for class variable'''
         (self.xbmc_ip, self.xbmc_port) = get_xbmc_params()
+
+    def do_gui(self, line):
+        '''
+        Set of namespace GUI methods.
+        '''
+        print 'Try help gui'
+
+    def do_gui_show_notification(self, line):
+        '''
+        Show a GUI notification with the text 'message' in the low right corner.
+        Usage: gui_show_notification message
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "GUI.ShowNotification",
+                "params": {"title": "PyController", "message":line},
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        if ret['result'] == 'OK':
+            print 'Message sent successfully'
+        else:
+            print 'Too bad, something went wrong'
 
     def do_json(self, line):
         '''
@@ -56,9 +83,9 @@ class XBMCRemote(cmd.Cmd):
         Get the JSON-RPC protocol version.
         Usage: json_version
         '''
-        command = {'jsonrpc': '2.0',
-                'method': 'JSONRPC.Version',
-                'id': 1}
+        command = {"jsonrpc": "2.0",
+                "method": "JSONRPC.Version",
+                "id": 1}
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         print ('JSON-RPC protocol version: %i.%i patch %i' %
                 (ret['result']['version']['major'],
@@ -76,11 +103,18 @@ class XBMCRemote(cmd.Cmd):
         Get the active players.
         Usage: player_get_active
         '''
-        command = {'jsonrpc': '2.0',
-                'method': 'Player.GetActivePlayers',
-                'id': 1}
+        command = {"jsonrpc": "2.0",
+                "method": "Player.GetActivePlayers",
+                "id": 1}
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
-        print ret
+        if len(ret['result']) == 0:
+            print 'Currently no active player'
+        else:
+            if len(ret['result']) == 1:
+                print 'One active player: ' + ret['result'][0]['type']
+            else:
+                # if two player, it can only be audio and picture
+                print 'Two active players: audio and picture'
 
     def do_EOF(self, line):
         '''Override end of file'''
@@ -88,11 +122,10 @@ class XBMCRemote(cmd.Cmd):
         return True
 
 def main():
-    '''Where everything starts.'''
+    '''Where everything starts'''
 
     remote_controller = XBMCRemote()
     remote_controller.cmdloop()
-
 
 if __name__ == '__main__':
     main()
