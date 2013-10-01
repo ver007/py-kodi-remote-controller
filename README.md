@@ -25,6 +25,21 @@ Contributions are welcome and easy. Every methods of the API can be included, on
 
 In any doubt, I will be pleased to discuss with you.
 
+## Developped commands
+
+### Audio library
++ audio_library_get_albums: display list of 20 albums from a given ID
++ audio_library_scan: start a scan of the audio library
+ 
+### GUI
++ gui_show_notification: display a notification on the screen with the text sent as a paramater
+
+### JSON
++ json_version: display the JSON version of the XBMC server
+
+### player
++ player_get_actives: display the active players (audio, video and picture)
+
 ## Useful links
 
 + XBMC wiki, ["JSON-RPC API"][1], some general explanations about the API
