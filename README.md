@@ -28,7 +28,7 @@ In any doubt, I will be pleased to discuss with you.
 ## Developped commands
 
 ### Audio library
-+ audio_library_get_albums: display list of 20 albums from a given ID
+```audio_library_get_albums``` display list of 20 albums from a given ID
 + audio_library_scan: start a scan of the audio library
  
 ### GUI
