@@ -161,6 +161,23 @@ class XBMCRemote(cmd.Cmd):
                 # if two player, it can only be audio and picture
                 print 'Two active players: audio and picture'
 
+    def do_system(self, line):
+        '''
+        Set of namespace system methods.
+        '''
+        print 'Try help system'
+
+    def do_system_reboot(self, line):
+        '''
+        Reboot the XBMC server.
+        Usage: system_reboot
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "System.Reboot",
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        display_result(ret)
+
     def do_EOF(self, line):
         '''Override end of file'''
         print "Bye!"

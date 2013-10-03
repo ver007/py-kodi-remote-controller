@@ -40,6 +40,9 @@ In any doubt, I will be pleased to discuss with you.
 ### player
 ```player_get_actives``` - display the active players (audio, video and picture)
 
+### system
+```system_reboot``` - reboot the XBMC server
+
 ## Useful links
 
 + XBMC wiki, ["JSON-RPC API"][1], some general explanations about the API
