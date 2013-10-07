@@ -99,6 +99,23 @@ class XBMCRemote(cmd.Cmd):
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         display_result(ret)
 
+    def do_input(self, line):
+        '''
+        Set of namespace input methods.
+        '''
+        print 'Try help input'
+
+    def do_input_home(self, line):
+        '''
+        Go to home screnn.
+        Usage: input_home
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "Input.Home",
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        display_result(ret)
+
     def do_gui(self, line):
         '''
         Set of namespace GUI methods.
