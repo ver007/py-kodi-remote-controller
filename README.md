@@ -34,6 +34,9 @@ In any doubt, I will be pleased to discuss with you.
 ### GUI
 ```gui_show_notification``` - display a notification on the screen with the text sent as a paramater
 
+### Input
+```input_home``` - go to home screen
+
 ### JSON
 ```json_version``` - display the JSON version of the XBMC server
 
