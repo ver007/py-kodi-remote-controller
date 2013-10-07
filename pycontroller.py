@@ -105,6 +105,17 @@ class XBMCRemote(cmd.Cmd):
         '''
         print 'Try help input'
 
+    def do_input_context_menu(self, line):
+        '''
+        Display context menu.
+        Usage: input_context_menu
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "Input.ContextMenu",
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        display_result(ret)
+    
     def do_input_home(self, line):
         '''
         Go to home screnn.

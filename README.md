@@ -35,6 +35,7 @@ In any doubt, I will be pleased to discuss with you.
 ```gui_show_notification``` - display a notification on the screen with the text sent as a paramater
 
 ### Input
+```input_context_menu``` - display context menu
 ```input_home``` - go to home screen
 
 ### JSON
