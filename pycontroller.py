@@ -101,7 +101,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_input(self, line):
         '''
-        Set of namespace input methods.
+        Set of namespace Input methods.
         '''
         print 'Try help input'
 
@@ -167,7 +167,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_player(self, line):
         '''
-        Set of namespace player methods.
+        Set of namespace Player methods.
         '''
         print 'Try help player'
 
@@ -191,7 +191,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_system(self, line):
         '''
-        Set of namespace system methods.
+        Set of namespace System methods.
         '''
         print 'Try help system'
 
@@ -202,6 +202,34 @@ class XBMCRemote(cmd.Cmd):
         '''
         command = {"jsonrpc": "2.0",
                 "method": "System.Reboot",
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        display_result(ret)
+
+    def do_video_library(self, line):
+        '''
+        Set of namespace VideoLibrary methods.
+        '''
+        print 'Try help audio_library'
+
+    def do_video_library_clean(self, line):
+        '''
+        Clean the video library.
+        Usage: video_library_clean
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "VideoLibrary.Clean",
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        display_result(ret)
+
+    def do_video_library_scan(self, line):
+        '''
+        Scan the video library.
+        Usage: video_library_scan
+        '''
+        command = {"jsonrpc": "2.0",
+                "method": "VideoLibrary.Scan",
                 "id": 1}
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         display_result(ret)
