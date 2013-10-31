@@ -125,6 +125,8 @@ class XBMCRemote(cmd.Cmd):
                 "method": "Input.Home",
                 "id": 1}
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        # Issue #1
+        print ret
         display_result(ret)
 
     def do_gui(self, line):
