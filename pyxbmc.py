@@ -46,10 +46,14 @@ def call_api(ip, port, command):
 
 def display_result(ret):
     '''Display command result for simple methods'''
-    if ret['result'] == 'OK':
-        print 'Command processed successfully'
+    logging.debug('call display_result')
+    if 'result' in ret:
+        if ret['result'] == 'OK':
+            print 'Command processed successfully'
+        else:
+            print 'Too bad, something went wrong'
     else:
-        print 'Too bad, something went wrong'
+        print 'Weird, can''t read the result'
 
 # parsers
 def parse_get_albums(line):
