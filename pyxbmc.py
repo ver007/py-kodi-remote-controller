@@ -11,6 +11,7 @@ XBMC remote controller based on TCP transport, JSON and using the (cmd) interfac
 import socket
 import json
 import cmd
+import logging
 import argparse
 
 # global constants
@@ -28,8 +29,11 @@ def get_xbmc_params():
             type=int,
             default=9090,
             help='TCP port of the XBMC server')
+    parser.add_argument("-v", "--verbosity",
+            action="store_true",
+            help='Increase output verbosity')
     args = parser.parse_args()
-    return args.ip, args.port
+    return args.ip, args.port, args.verbosity
 
 def call_api(ip, port, command):
     '''Send the command using TCP'''
@@ -65,12 +69,16 @@ class XBMCRemote(cmd.Cmd):
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.xbmc_ip, self.xbmc_port) = get_xbmc_params()
+        (self.xbmc_ip, self.xbmc_port, verbosity) = get_xbmc_params()
+        if verbosity:
+            logging.basicConfig(level=logging.DEBUG)
+        logging.info('XBMC controller started in verbosity mode')
 
     def do_audio_library(self, line):
         '''
         Set of namespace AudioLibrary methods.
         '''
+        logging.debug('call do_audio_library')
         print 'Try help audio_library'
 
     def do_audio_library_get_albums(self, line):
@@ -78,12 +86,15 @@ class XBMCRemote(cmd.Cmd):
         Retrieve all albums with criteria.
         Usage: audio_library_get_albums [start]
         '''
+        logging.debug('call do_audio_library_get_albums')
         (start, end) = parse_get_albums(line)
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetAlbums",
                 "params": { "limits": { "start": start, "end": end } },
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         albums = ret['result']['albums']
         for album in albums:
             print ('Album ID: %4i - %s' % (album['albumid'], album['label']))
@@ -93,16 +104,20 @@ class XBMCRemote(cmd.Cmd):
         Scan the audio library.
         Usage: audio_library_scan
         '''
+        logging.debug('call do_audio_library_scan')
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.Scan",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         display_result(ret)
 
     def do_input(self, line):
         '''
         Set of namespace Input methods.
         '''
+        logging.debug('call do_input')
         print 'Try help input'
 
     def do_input_context_menu(self, line):
@@ -110,10 +125,13 @@ class XBMCRemote(cmd.Cmd):
         Display context menu.
         Usage: input_context_menu
         '''
+        logging.debug('call do_input_context_menu')
         command = {"jsonrpc": "2.0",
                 "method": "Input.ContextMenu",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         display_result(ret)
     
     def do_input_home(self, line):
@@ -121,18 +139,20 @@ class XBMCRemote(cmd.Cmd):
         Go to home screnn.
         Usage: input_home
         '''
+        logging.debug('call do_input_home')
         command = {"jsonrpc": "2.0",
                 "method": "Input.Home",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
-        # Issue #1
-        print ret
+        logging.debug('return: %s', ret)
         display_result(ret)
 
     def do_gui(self, line):
         '''
         Set of namespace GUI methods.
         '''
+        logging.debug('call do_gui')
         print 'Try help gui'
 
     def do_gui_show_notification(self, line):
@@ -140,17 +160,21 @@ class XBMCRemote(cmd.Cmd):
         Show a GUI notification with the text 'message' in the low right corner.
         Usage: gui_show_notification message
         '''
+        logging.debug('call do_gui_show_notification')
         command = {"jsonrpc": "2.0",
                 "method": "GUI.ShowNotification",
                 "params": {"title": "PyController", "message":line},
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         display_result(ret)
         
     def do_json(self, line):
         '''
         Set of namespace JSONRPC methods.
         '''
+        logging.debug('call do_json')
         print 'Try help json'
 
     def do_json_version(self, line):
@@ -158,10 +182,13 @@ class XBMCRemote(cmd.Cmd):
         Get the JSON-RPC protocol version.
         Usage: json_version
         '''
+        logging.debug('call do_json_version')
         command = {"jsonrpc": "2.0",
                 "method": "JSONRPC.Version",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         print ('JSON-RPC protocol version: %i.%i patch %i' %
                 (ret['result']['version']['major'],
                 ret['result']['version']['minor'],
@@ -171,6 +198,7 @@ class XBMCRemote(cmd.Cmd):
         '''
         Set of namespace Player methods.
         '''
+        logging.debug('call do_player')
         print 'Try help player'
 
     def do_player_get_actives(self, line):
@@ -178,10 +206,13 @@ class XBMCRemote(cmd.Cmd):
         Get the active players.
         Usage: player_get_active
         '''
+        logging.debug('call do_player_get_actives')
         command = {"jsonrpc": "2.0",
                 "method": "Player.GetActivePlayers",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         if len(ret['result']) == 0:
             print 'Currently no active player'
         else:
@@ -195,6 +226,7 @@ class XBMCRemote(cmd.Cmd):
         '''
         Set of namespace System methods.
         '''
+        logging.debug('call do_system')
         print 'Try help system'
 
     def do_system_reboot(self, line):
@@ -202,16 +234,20 @@ class XBMCRemote(cmd.Cmd):
         Reboot the XBMC server.
         Usage: system_reboot
         '''
+        logging.debug('call do_system_reboot')
         command = {"jsonrpc": "2.0",
                 "method": "System.Reboot",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         display_result(ret)
 
     def do_video_library(self, line):
         '''
         Set of namespace VideoLibrary methods.
         '''
+        logging.debug('call do_video_library')
         print 'Try help audio_library'
 
     def do_video_library_clean(self, line):
@@ -219,10 +255,13 @@ class XBMCRemote(cmd.Cmd):
         Clean the video library.
         Usage: video_library_clean
         '''
+        logging.debug('call do_video_library_clean')
         command = {"jsonrpc": "2.0",
                 "method": "VideoLibrary.Clean",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         display_result(ret)
 
     def do_video_library_scan(self, line):
@@ -230,15 +269,19 @@ class XBMCRemote(cmd.Cmd):
         Scan the video library.
         Usage: video_library_scan
         '''
+        logging.debug('call do_video_library_scan')
         command = {"jsonrpc": "2.0",
                 "method": "VideoLibrary.Scan",
                 "id": 1}
+        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
         display_result(ret)
 
     def do_EOF(self, line):
         '''Override end of file'''
-        print "Bye!"
+        logging.debug('Bye!')
+        print 'Bye!'
         return True
 
 def main():
