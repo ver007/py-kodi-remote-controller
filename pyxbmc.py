@@ -233,6 +233,21 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_playlist')
         print 'Try help playlist'
 
+    def do_playlist_get_items(self, line):
+        '''
+        Get all items from playlist.
+        Usage: playlist_get_items id
+        '''
+        logging.debug('call playlist_get_items')
+        playlist_id = int(line)
+        command = {"jsonrpc": "2.0",
+                "method": "Playlist.GetItems",
+                "params": {"playlistid": playlist_id},
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+
     def do_playlist_get_playlists(self, line):
         '''
         Get the existing playlist.
