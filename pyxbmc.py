@@ -167,7 +167,7 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_gui_show_notification')
         command = {"jsonrpc": "2.0",
                 "method": "GUI.ShowNotification",
-                "params": {"title": "PyController", "message":line},
+                "params": {"title": "PyController", "message": line},
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
@@ -236,11 +236,26 @@ class XBMCRemote(cmd.Cmd):
     def do_playlist_get_playlists(self, line):
         '''
         Get the existing playlist.
-        Usage: playlist_get_playlist
+        Usage: playlist_get_playlists
         '''
         logging.debug('call playlist_get_playlists')
         command = {"jsonrpc": "2.0",
                 "method": "Playlist.GetPlaylists",
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+
+    def do_playlist_get_properties(self, line):
+        '''
+        Get the values of the given properties.
+        Usage: playlist_get_properties id
+        '''
+        logging.debug('call playlist_get_properties')
+        playlist_id = int(line)
+        command = {"jsonrpc": "2.0",
+                "method": "Playlist.GetProperties",
+                "params": {"playlistid": playlist_id},
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
