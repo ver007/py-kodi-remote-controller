@@ -226,6 +226,26 @@ class XBMCRemote(cmd.Cmd):
                 # if two player, it can only be audio and picture
                 print 'Two active players: audio and picture'
 
+    def do_playlist(self, line):
+        '''
+        Set of namespace Playlist  methods.
+        '''
+        logging.debug('call do_playlist')
+        print 'Try help playlist'
+
+    def do_playlist_get_playlists(self, line):
+        '''
+        Get the existing playlist.
+        Usage: playlist_get_playlist
+        '''
+        logging.debug('call playlist_get_playlists')
+        command = {"jsonrpc": "2.0",
+                "method": "Playlist.GetPlaylists",
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+
     def do_system(self, line):
         '''
         Set of namespace System methods.
