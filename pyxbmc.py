@@ -99,6 +99,20 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('return: %s', ret)
         display_result(ret)
 
+    def do_audio_library_export(self, line):
+        '''
+        Exports all items from the audio library
+        Usage: audio_library_export
+        '''
+        logging.debug('call do_audio_library_export')
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.Export",
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
     def do_audio_library_get_album_details(self, line):
         '''
         Retrieve details about a specific album.
