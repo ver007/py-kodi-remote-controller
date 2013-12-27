@@ -63,8 +63,16 @@ def display_albums(albums):
 
 # parsers
 
-def parse_get_albums(line):
-    '''Parse line and return start/end for get_albums'''
+def parse_get_int(line):
+    '''Parse line for an integer'''
+    if len(line) == 0:
+        ret_val = 0
+    else:
+        ret_val = int(line)
+    return ret_val
+
+def parse_get_limits(line):
+    '''Parse line and return start/end limits'''
     if len(line) == 0:
         start = 0
     else:
@@ -141,7 +149,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: audio_library_get_albums [start]
         '''
         logging.debug('call do_audio_library_get_albums')
-        (start, end) = parse_get_albums(line)
+        (start, end) = parse_get_limits(line)
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetAlbums",
                 "params": { "limits": { "start": start, "end": end } },
@@ -304,7 +312,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: playlist_get_items id
         '''
         logging.debug('call playlist_get_items')
-        playlist_id = int(line)
+        playlist_id = parse_get_int(line)
         command = {"jsonrpc": "2.0",
                 "method": "Playlist.GetItems",
                 "params": {"playlistid": playlist_id},
@@ -332,10 +340,10 @@ class XBMCRemote(cmd.Cmd):
         Usage: playlist_get_properties id
         '''
         logging.debug('call playlist_get_properties')
-        playlist_id = int(line)
+        playlist_id = parse_get_int(line)
         command = {"jsonrpc": "2.0",
                 "method": "Playlist.GetProperties",
-                "params": {"playlistid": playlist_id},
+                "params": {"playlistid": playlist_id, "properties": {} },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
