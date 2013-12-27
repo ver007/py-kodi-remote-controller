@@ -85,6 +85,20 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_audio_library')
         print 'Try help audio_library'
 
+    def do_audio_library_clean(self, line):
+        '''
+        Cleans the audio library from non-existent items
+        Usage: audio_library_clean
+        '''
+        logging.debug('call do_audio_library_clean')
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.Clean",
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
     def do_audio_library_get_album_details(self, line):
         '''
         Retrieve details about a specific album.
