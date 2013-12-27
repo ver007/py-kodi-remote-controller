@@ -55,7 +55,14 @@ def display_result(ret):
     else:
         print 'Weird, can''t read the result'
 
+def display_albums(albums):
+    '''Nice looking albums display'''
+    logging.debug('call display_albums')
+    for album in albums:
+        print ('Album ID: %4i - %s' % (album['albumid'], album['label']))
+
 # parsers
+
 def parse_get_albums(line):
     '''Parse line and return start/end for get_albums'''
     if len(line) == 0:
@@ -143,8 +150,23 @@ class XBMCRemote(cmd.Cmd):
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         logging.debug('return: %s', ret)
         albums = ret['result']['albums']
-        for album in albums:
-            print ('Album ID: %4i - %s' % (album['albumid'], album['label']))
+        display_albums(albums)
+
+    def do_audio_library_get_recently_albums(self, line):
+        '''
+        Retrieve recently added albums (10 last entries)
+        Usage: audio_library_get_recently_albums
+        '''
+        logging.debug('call do_audio_library_get_recently_albums')
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.GetRecentlyAddedAlbums",
+                "params": { "limits": { "start": 0, "end": 9} },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        albums = ret['result']['albums']
+        display_albums(albums)
 
     def do_audio_library_scan(self, line):
         '''
