@@ -53,13 +53,21 @@ def display_result(ret):
         else:
             print 'Too bad, something went wrong'
     else:
-        print 'Weird, can''t read the result'
+        print "Weird, can't read the result"
 
 def display_albums(albums):
     '''Nice looking albums display'''
     logging.debug('call display_albums')
-    for album in albums:
-        print ('Album ID: %4i - %s' % (album['albumid'], album['label']))
+    print 'Recently added albums:'
+    print
+    for i, album in enumerate(albums):
+        print ('%i. %s by %s (%s) - id: %i') % (
+                i,
+                album['title'],
+                album['artist'][0],
+                album['year'],
+                album['albumid'])
+    print
 
 # parsers
 
@@ -107,7 +115,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_audio_library_clean(self, line):
         '''
-        Cleans the audio library from non-existent items
+        Cleans the audio library from non-existent items.
         Usage: audio_library_clean
         '''
         logging.debug('call do_audio_library_clean')
@@ -157,7 +165,8 @@ class XBMCRemote(cmd.Cmd):
         (start, end) = parse_get_limits(line)
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetAlbums",
-                "params": { "limits": { "start": start, "end": end } },
+                "params": {
+                    "limits": { "start": start, "end": end } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
@@ -167,13 +176,15 @@ class XBMCRemote(cmd.Cmd):
 
     def do_audio_library_get_recently_albums(self, line):
         '''
-        Retrieve recently added albums (10 last entries)
+        Retrieve recently added albums (10 last entries).
         Usage: audio_library_get_recently_albums
         '''
         logging.debug('call do_audio_library_get_recently_albums')
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetRecentlyAddedAlbums",
-                "params": { "limits": { "start": 0, "end": 9 } },
+                "params": {
+                    "properties": ["title", "artist", "year"],
+                    "limits": { "start": 0, "end": 9 } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
