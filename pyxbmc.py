@@ -80,6 +80,11 @@ def parse_get_limits(line):
     end = start + DISPLAY_NB_LINES
     return (start, end)
 
+def parse_get_string(line):
+    '''Parse line and return the first string (without space)'''
+    args = str.split(line)
+    return args[0]
+
 # process return messages
 
 class XBMCRemote(cmd.Cmd):
@@ -272,13 +277,16 @@ class XBMCRemote(cmd.Cmd):
     def do_json_introspect(self, line):
         '''
         Enumerates all actions and descriptions
-        Usage: json_introspect
+        Usage: json_introspect method
         '''
+        #TODO: add a pretty print for readability
         logging.debug('call do_json_introspect')
+        method = parse_get_string(line)
         command = {"jsonrpc": "2.0",
                 "method": "JSONRPC.Introspect",
-                "params": {"filer": {
-                    "id": "Introspect"} },
+                "params": {
+                    "filter": {
+                        "id": method, "type": "method" } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
@@ -309,6 +317,35 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_player')
         print 'Try help player'
 
+    def do_player_open(self, line):
+        '''
+        Start playback of either the playlist with the given ID, a slideshow with the pictures from the given directory or a single file or an item from the database.
+        Usage: player_open
+        '''
+        logging.debug('call do_player_open')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.Open",
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
+    def do_player_playpause(self, line):
+        '''
+        Pauses or unpause playback and returns the new state.
+        Usage: player_open
+        '''
+        logging.debug('call do_player_playpause')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.PlayPause",
+                "params": {"playerid": 0 },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
     def do_player_set_partymode(self, line):
         '''
         Turn partymode on or off
@@ -319,7 +356,7 @@ class XBMCRemote(cmd.Cmd):
                 "method": "Player.SetPartymode",
                 "params": {
                     "playerid": 1,
-                    "partymode": true },
+                    "partymode": True },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
