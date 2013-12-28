@@ -325,6 +325,7 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_player_open')
         command = {"jsonrpc": "2.0",
                 "method": "Player.Open",
+                "params": {"item": {"playlistid": 0 } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
@@ -355,7 +356,7 @@ class XBMCRemote(cmd.Cmd):
         command = {"jsonrpc": "2.0",
                 "method": "Player.SetPartymode",
                 "params": {
-                    "playerid": 1,
+                    "playerid": 0,
                     "partymode": True },
                 "id": 1}
         logging.debug('command: %s', command)
@@ -384,6 +385,21 @@ class XBMCRemote(cmd.Cmd):
                 # if two player, it can only be audio and picture
                 print 'Two active players: audio and picture'
 
+    def do_player_stop(self, line):
+        '''
+        Stops playback.
+        Usage: player_set_partymode
+        '''
+        logging.debug('call do_player_stop')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.Stop",
+                "params": { "playerid": 0 },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+        
     def do_playlist(self, line):
         '''
         Set of namespace Playlist  methods.
