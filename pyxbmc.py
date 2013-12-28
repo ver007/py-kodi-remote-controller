@@ -385,6 +385,38 @@ class XBMCRemote(cmd.Cmd):
                 # if two player, it can only be audio and picture
                 print 'Two active players: audio and picture'
 
+    def do_player_get_item(self, line):
+        '''
+        Retrieves the currently played item
+        Usage: player_get_item
+        '''
+        logging.debug('call do_player_get_item')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.GetItem",
+                "params": { "playerid": 0 },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+        
+    def do_player_get_properties(self, line):
+        '''
+        Retrieves the values of the given properties.
+        Usage: player_get_properties
+        '''
+        logging.debug('call do_player_get_properties')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.GetProperties",
+                "params": {
+                    "playerid": 0,
+                    "properties": ["time", "totaltime"] },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+        
     def do_player_stop(self, line):
         '''
         Stops playback.
@@ -406,6 +438,40 @@ class XBMCRemote(cmd.Cmd):
         '''
         logging.debug('call do_playlist')
         print 'Try help playlist'
+
+    def do_playlist_add(self, line):
+        '''
+        Add item(s) to playlist.
+        Usage: playlist_add id
+        '''
+        logging.debug('call playlist_add')
+        playlist_id = parse_get_int(line)
+        command = {"jsonrpc": "2.0",
+                "method": "Playlist.Add",
+                "params": {
+                    "playlistid": 0,
+                    "item": {"songid": 14934 } },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
+    def do_playlist_clear(self, line):
+        '''
+        Clear playlist.
+        Usage: playlist_clear id
+        '''
+        logging.debug('call playlist_clear')
+        playlist_id = parse_get_int(line)
+        command = {"jsonrpc": "2.0",
+                "method": "Playlist.Clear",
+                "params": {"playlistid": 0 },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
 
     def do_playlist_get_items(self, line):
         '''
