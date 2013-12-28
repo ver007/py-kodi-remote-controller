@@ -168,13 +168,28 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_audio_library_get_recently_albums')
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetRecentlyAddedAlbums",
-                "params": { "limits": { "start": 0, "end": 9} },
+                "params": { "limits": { "start": 0, "end": 9 } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         logging.debug('return: %s', ret)
         albums = ret['result']['albums']
         display_albums(albums)
+
+    def do_audio_library_get_songs(self, line):
+        '''
+        Retrieve all songs from specified album, artist or genre
+        Usage: audio_library_get_songs start
+        '''
+        logging.debug('call do_audio_library_get_songs')
+        (start, end) = parse_get_limits(line)
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.GetSongs",
+                "params": { "limits": { "start": 0, "end": 10 } },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
 
     def do_audio_library_scan(self, line):
         '''
@@ -254,6 +269,22 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_json')
         print 'Try help json'
 
+    def do_json_introspect(self, line):
+        '''
+        Enumerates all actions and descriptions
+        Usage: json_introspect
+        '''
+        logging.debug('call do_json_introspect')
+        command = {"jsonrpc": "2.0",
+                "method": "JSONRPC.Introspect",
+                "params": {"filer": {
+                    "id": "Introspect"} },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
     def do_json_version(self, line):
         '''
         Get the JSON-RPC protocol version.
@@ -278,6 +309,23 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call do_player')
         print 'Try help player'
 
+    def do_player_set_partymode(self, line):
+        '''
+        Turn partymode on or off
+        Usage: player_set_partymode
+        '''
+        logging.debug('call do_player_set_party_mode')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.SetPartymode",
+                "params": {
+                    "playerid": 1,
+                    "partymode": true },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+        
     def do_player_get_actives(self, line):
         '''
         Get the active players.
