@@ -11,12 +11,13 @@ XBMC remote controller based on TCP transport, JSON and using the (cmd) interfac
 import socket
 import json
 import cmd
+from datetime import timedelta
 import logging
 import argparse
 
 # global constants
-BUFFER_SIZE = 1024
-DISPLAY_NB_LINES = 20
+BUFFER_SIZE = 4096
+DISPLAY_NB_LINES = 10
 
 # utilities functions
 
@@ -42,6 +43,7 @@ def call_api(ip, port, command):
     s.send(json.dumps(command))
     data = s.recv(BUFFER_SIZE)
     s.close()
+    logging.debug('data length: %i', len(data))
     return json.loads(data)
 
 def display_result(ret):
@@ -67,6 +69,24 @@ def display_albums(albums):
                 album['artist'][0],
                 album['year'],
                 album['albumid'])
+    print
+
+def display_playlist(tracks):
+    '''Nice looking playlist display'''
+    logging.debug('call display_albums')
+    print 'Playlist audio:'
+    print
+    total_duration = 0
+    for i, track in enumerate(tracks):
+        print ('%i / %i - %s by %s - %s') % (
+                i + 1,
+                len(tracks),
+                track['title'],
+                track['artist'][0],
+                str(timedelta(seconds=track['duration'])))
+        total_duration += track['duration']
+    print
+    print 'Total duration: %s' % str(timedelta(seconds=total_duration))
     print
 
 # parsers
@@ -174,17 +194,35 @@ class XBMCRemote(cmd.Cmd):
         albums = ret['result']['albums']
         display_albums(albums)
 
-    def do_audio_library_get_recently_albums(self, line):
+    def do_audio_library_get_recently_added_albums(self, line):
         '''
-        Retrieve recently added albums (10 last entries).
-        Usage: audio_library_get_recently_albums
+        Retrieve recently added albums.
+        Usage: audio_library_get_recently_added_albums
         '''
-        logging.debug('call do_audio_library_get_recently_albums')
+        logging.debug('call do_audio_library_get_recently_added_albums')
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetRecentlyAddedAlbums",
                 "params": {
                     "properties": ["title", "artist", "year"],
-                    "limits": { "start": 0, "end": 9 } },
+                    "limits": { "start": 0, "end": DISPLAY_NB_LINES } },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        albums = ret['result']['albums']
+        display_albums(albums)
+
+    def do_audio_library_get_recently_played_albums(self, line):
+        '''
+        Retrieve recently played albums.
+        Usage: audio_library_get_recently_played_albums
+        '''
+        logging.debug('call do_audio_library_get_recently_played_albums')
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.GetRecentlyPlayedAlbums",
+                "params": {
+                    "properties": ["title", "artist", "year"],
+                    "limits": { "start": 0, "end": DISPLAY_NB_LINES } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
@@ -452,16 +490,16 @@ class XBMCRemote(cmd.Cmd):
 
     def do_playlist_add(self, line):
         '''
-        Add item(s) to playlist.
-        Usage: playlist_add id
+        Add item(s) to playlist (limited to albums).
+        Usage: playlist_add album_id
         '''
         logging.debug('call playlist_add')
-        playlist_id = parse_get_int(line)
+        album_id = parse_get_int(line)
         command = {"jsonrpc": "2.0",
                 "method": "Playlist.Add",
                 "params": {
                     "playlistid": 0,
-                    "item": {"songid": 14934 } },
+                    "item": {"albumid": album_id } },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
@@ -486,18 +524,21 @@ class XBMCRemote(cmd.Cmd):
 
     def do_playlist_get_items(self, line):
         '''
-        Get all items from playlist.
-        Usage: playlist_get_items id
+        Get all items from playlist (limited to audio).
+        Usage: playlist_get_items
         '''
         logging.debug('call playlist_get_items')
-        playlist_id = parse_get_int(line)
         command = {"jsonrpc": "2.0",
                 "method": "Playlist.GetItems",
-                "params": {"playlistid": playlist_id},
+                "params": {
+                    "playlistid": 0,
+                    "properties": ["title", "artist", "duration"] },
                 "id": 1}
         logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         logging.debug('return: %s', ret)
+        tracks = ret['result']['items']
+        display_playlist(tracks)
 
     def do_playlist_get_playlists(self, line):
         '''
