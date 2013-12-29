@@ -166,7 +166,7 @@ class XBMCRemote(cmd.Cmd):
         Retrieve details about a specific album.
         Usage: audio_library_get_album_degtails album_id
         '''
-        logging.debug('call do_audio_library_get_albums')
+        logging.debug('call do_audio_library_get_album_details')
         album_id = int(line)
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetAlbumDetails",
@@ -186,6 +186,7 @@ class XBMCRemote(cmd.Cmd):
         command = {"jsonrpc": "2.0",
                 "method": "AudioLibrary.GetAlbums",
                 "params": {
+                    "properties": ["title", "artist", "year"],
                     "limits": { "start": start, "end": end } },
                 "id": 1}
         logging.debug('command: %s', command)
