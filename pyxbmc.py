@@ -10,13 +10,14 @@ XBMC remote controller based on TCP transport, JSON and using the (cmd) interfac
 
 import socket
 import json
-import cmd
 from datetime import timedelta
+import random
+import cmd
 import logging
 import argparse
 
 # global constants
-BUFFER_SIZE = 4096
+BUFFER_SIZE = 2048
 DISPLAY_NB_LINES = 10
 
 # utilities functions
@@ -40,11 +41,16 @@ def call_api(ip, port, command):
     '''Send the command using TCP'''
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((ip, port))
+    logging.debug('command: %s', command)
     s.send(json.dumps(command))
     data = s.recv(BUFFER_SIZE)
     s.close()
     logging.debug('data length: %i', len(data))
-    return json.loads(data)
+    if len(data) == BUFFER_SIZE:
+        logging.warning('return is the size of the buffer')
+    ret = json.loads(data)
+    logging.debug('return: %s', ret)
+    return ret
 
 def display_result(ret):
     '''Display command result for simple methods'''
@@ -56,6 +62,37 @@ def display_result(ret):
             print 'Too bad, something went wrong'
     else:
         print "Weird, can't read the result"
+
+def get_nb_albums(ip, port):
+    '''Give the total number of albums in the library'''
+    command = {"jsonrpc": "2.0",
+            "method": "AudioLibrary.GetAlbums",
+            "params": {
+                "limits": { "start": 0, "end": 1 } },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    return ret['result']['limits']['total']
+
+def get_album_info(album_id, ip, port):
+    '''Query info for a single album'''
+    command = {"jsonrpc": "2.0",
+            "method": "AudioLibrary.GetAlbumDetails",
+            "params": {
+                "albumid": album_id,
+                "properties": ["title", "artist", "year"] },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    return ret['result']['albumdetails']
+
+def disp_album_info(pos, album):
+    '''Display album info in line'''
+    logging.debug('call disp_album_info')
+    print ('%i. %s by %s (%s) - id: %i') % (
+            pos,
+            album['title'],
+            album['artist'][0],
+            album['year'],
+            album['albumid'])
 
 def display_albums(albums):
     '''Nice looking albums display'''
@@ -625,11 +662,41 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('return: %s', ret)
         display_result(ret)
 
+    def do_xbmc_get_info_labels(self, line):
+        '''
+        Retrieve info labels about XBMC and the system.
+        '''
+        logging.debug('call do_xbmc_get_info_labels')
+        command = {"jsonrpc": "2.0",
+                "method": "XBMC.GetInfoLabels",
+                "params": {"labels": ["System.FriendlyName"] },
+                "id": 1}
+        logging.debug('command: %s', command)
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        logging.debug('return: %s', ret)
+        display_result(ret)
+
     def do_EOF(self, line):
         '''Override end of file'''
         logging.debug('Bye!')
         print 'Bye!'
         return True
+
+    def do_albums_random(self, line):
+        '''
+        Display a random selection of albums.
+        Usage: albums_random
+        '''
+        logging.debug('call function do_albums_random')
+        nb_albums = get_nb_albums(self.xbmc_ip, self.xbmc_port)
+        albums_id = random.sample(xrange(nb_albums), DISPLAY_NB_LINES)
+        print
+        for i, album_id in enumerate(albums_id):
+            album = get_album_info(album_id, self.xbmc_ip, self.xbmc_port)
+            disp_album_info(i, album)            
+        print
+        print 'Total number of albums: %i' % nb_albums
+        print
 
 def main():
     '''Where everything starts'''
