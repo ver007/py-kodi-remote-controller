@@ -77,6 +77,28 @@ def get_audio_library(obj):
             obj.albums_artist.append(album['artist'])
             obj.albums_year.append(album['year'])
 
+def set_playlist_clear(ip, port):
+    '''Clear the audio playlist'''
+    logging.debug('call function set_playlist_clear')
+    command = {"jsonrpc": "2.0",
+            "method": "Playlist.Clear",
+            "params": {"playlistid": 0 },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
+def set_playtlist_add(album_id, ip, port):
+    '''Add an album to the audio playlist'''
+    logging.debug('call function set_playlist_add')
+    command = {"jsonrpc": "2.0",
+            "method": "Playlist.Add",
+            "params": {
+                "playlistid": 0,
+                "item": {"albumid": album_id } },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
 def display_result(ret):
     '''Display command result for simple methods'''
     logging.debug('call display_result')
@@ -152,6 +174,16 @@ def display_playlist(tracks):
     print
 
 # parsers
+
+def parse_single_int(line):
+    '''Parse line for a single int'''
+    logging.debug('call function parse_single_int')
+    args = str.split(line)
+    ret_val = None
+    #TODO: catch error instead of test
+    if len(args) == 1:
+        ret_val = int(args[0])
+    return ret_val
 
 def parse_get_int(line):
     '''Parse line for an integer'''
@@ -709,11 +741,10 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('return: %s', ret)
         display_result(ret)
 
-    def do_EOF(self, line):
-        '''Override end of file'''
-        logging.debug('Bye!')
-        print 'Bye!'
-        return True
+    # end of trials
+    # bellow definitive functions
+
+    # albums functions
 
     def do_albums_random(self, line):
         '''
@@ -733,6 +764,32 @@ class XBMCRemote(cmd.Cmd):
         print
         print 'Total number of albums: %i' % self.nb_albums
         print
+
+    # play functions
+
+    def do_play_album(self, line):
+        '''
+        Play a single album.  
+        Usage: play_album [id]
+            Play the album behind the id.
+            Use the albums function to find the id.
+            The id is optional, an album is randomly selected without it.
+        '''
+        logging.debug('call function do_play_album')
+        print line
+        album_id = parse_single_int(line)
+        print album_id
+        if not album_id:
+            logging.debug('no album id provided')
+            album_id = 0
+        set_playlist_clear(self.xbmc_ip, self.xbmc_port)
+        set_playtlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+
+    def do_EOF(self, line):
+        '''Override end of file'''
+        logging.debug('Bye!')
+        print 'Bye!'
+        return True
 
 def main():
     '''Where everything starts'''
