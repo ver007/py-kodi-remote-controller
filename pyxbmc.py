@@ -52,6 +52,31 @@ def call_api(ip, port, command):
     logging.debug('return: %s', ret)
     return ret
 
+def get_audio_library(obj):
+    '''Manage lists for audio library, from a local file or the server'''
+    logging.debug('call function get_audio_library')
+    logging.debug('load albums library in memory')
+    nb_albums = get_nb_albums(obj.xbmc_ip, obj.xbmc_port)
+    nb_albums = 42
+    obj.nb_albums = nb_albums
+    limits = range(0, nb_albums, 10)
+    if not limits[-1] == nb_albums:
+        limits.append(nb_albums)
+    for start, end in zip(limits[:-1], limits[1:]):
+        print 'Processing album %i to %i ...' % (start, end)
+        command = {"jsonrpc": "2.0",
+                "method": "AudioLibrary.GetAlbums",
+                "params": {
+                    "properties": ["title", "artist", "year"],
+                    "limits": { "start": start, "end": end } },
+                "id": 1}
+        ret = call_api(obj.xbmc_ip, obj.xbmc_port, command)
+        for album in ret['result']['albums']:
+            obj.albums_id.append(album['albumid'])
+            obj.albums_title.append(album['title'])
+            obj.albums_artist.append(album['artist'])
+            obj.albums_year.append(album['year'])
+
 def display_result(ret):
     '''Display command result for simple methods'''
     logging.debug('call display_result')
@@ -162,6 +187,14 @@ class XBMCRemote(cmd.Cmd):
         if verbosity:
             logging.basicConfig(level=logging.DEBUG)
         logging.info('XBMC controller started in verbosity mode')
+        # initialize library description
+        self.nb_albums = 0
+        self.albums_id = []
+        self.albums_title = []
+        self.albums_artist = []
+        self.albums_year = []
+        # fill data
+        get_audio_library(self)
 
     def do_audio_library(self, line):
         '''
@@ -688,14 +721,17 @@ class XBMCRemote(cmd.Cmd):
         Usage: albums_random
         '''
         logging.debug('call function do_albums_random')
-        nb_albums = get_nb_albums(self.xbmc_ip, self.xbmc_port)
-        albums_id = random.sample(xrange(nb_albums), DISPLAY_NB_LINES)
+        albums_pos = random.sample(xrange(self.nb_albums), DISPLAY_NB_LINES)
         print
-        for i, album_id in enumerate(albums_id):
-            album = get_album_info(album_id, self.xbmc_ip, self.xbmc_port)
+        for i, album_pos in enumerate(albums_pos):
+            album = {}
+            album['albumid'] = self.albums_id[album_pos]
+            album['title'] = self.albums_title[album_pos]
+            album['artist'] = self.albums_artist[album_pos]
+            album['year'] = self.albums_year[album_pos]
             disp_album_info(i, album)            
         print
-        print 'Total number of albums: %i' % nb_albums
+        print 'Total number of albums: %i' % self.nb_albums
         print
 
 def main():
