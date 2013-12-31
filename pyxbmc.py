@@ -87,7 +87,7 @@ def set_playlist_clear(ip, port):
     ret = call_api(ip, port, command)
     display_result(ret)
 
-def set_playtlist_add(album_id, ip, port):
+def set_playlist_add(album_id, ip, port):
     '''Add an album to the audio playlist'''
     logging.debug('call function set_playlist_add')
     command = {"jsonrpc": "2.0",
@@ -95,6 +95,17 @@ def set_playtlist_add(album_id, ip, port):
             "params": {
                 "playlistid": 0,
                 "item": {"albumid": album_id } },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
+def set_player_open(ip, port):
+    '''Open the audio playlist'''
+    logging.debug('call function set_player_open')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Open",
+            "params": {
+                "item": {"playlistid": 0 } },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -783,7 +794,8 @@ class XBMCRemote(cmd.Cmd):
             logging.debug('no album id provided')
             album_id = 0
         set_playlist_clear(self.xbmc_ip, self.xbmc_port)
-        set_playtlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+        set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+        set_player_open(self.xbmc_ip, self.xbmc_port)
 
     def do_EOF(self, line):
         '''Override end of file'''
