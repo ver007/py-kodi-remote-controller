@@ -11,6 +11,7 @@ XBMC remote controller based on TCP transport, JSON and using the (cmd) interfac
 import socket
 import json
 from datetime import timedelta
+import pickle
 import random
 import cmd
 import logging
@@ -52,12 +53,56 @@ def call_api(ip, port, command):
     logging.debug('return: %s', ret)
     return ret
 
+def is_file(fname):
+    '''Return false if the file does not exist'''
+    logging.debug('call function is_file')
+    try:
+        open(fname)
+    except IOError:
+        return False
+    return True
+
+def is_library_files():
+    '''Check if there are library local files'''
+    logging.debug('call function is_library_files')
+    ret = True
+    ret = ret and is_file('albums_id.pickle')
+    ret = ret and is_file('albums_title.pickle')
+    ret = ret and is_file('albums_artist.pickle')
+    ret = ret and is_file('albums_year.pickle')
+    logging.debug('library files check: %s', ret)
+    return ret
+
 def get_audio_library(obj):
     '''Manage lists for audio library, from a local file or the server'''
     logging.debug('call function get_audio_library')
     logging.debug('load albums library in memory')
+    if is_library_files():
+        get_audio_library_from_files(obj)
+    else:
+        get_audio_library_from_server(obj)
+
+def get_audio_library_from_files(obj):
+    '''Load the library in memory from local files'''
+    logging.debug('call function get_audio_library_from_files')
+    f = open('albums_id.pickle', 'rb')
+    obj.albums_id = pickle.load(f)
+    f.close()
+    f = open('albums_title.pickle', 'rb')
+    obj.albums_title = pickle.load(f)
+    f.close()
+    f = open('albums_artist.pickle', 'rb')
+    obj.albums_artist = pickle.load(f)
+    f.close()
+    f = open('albums_year.pickle', 'rb')
+    obj.albums_year = pickle.load(f)
+    f.close()
+    obj.nb_albums = len(obj.albums_id)
+
+def get_audio_library_from_server(obj):
+    '''Load the library in memory from the XBMC server'''
+    logging.debug('get_audio_library_from_server')
     nb_albums = get_nb_albums(obj.xbmc_ip, obj.xbmc_port)
-    nb_albums = 42
     obj.nb_albums = nb_albums
     limits = range(0, nb_albums, 10)
     if not limits[-1] == nb_albums:
@@ -76,6 +121,18 @@ def get_audio_library(obj):
             obj.albums_title.append(album['title'])
             obj.albums_artist.append(album['artist'])
             obj.albums_year.append(album['year'])
+    f = open('albums_id.pickle', 'wb')
+    pickle.dump(obj.albums_id, f)
+    f.close()
+    f = open('albums_title.pickle', 'wb')
+    pickle.dump(obj.albums_title, f)
+    f.close()
+    f = open('albums_artist.pickle', 'wb')
+    pickle.dump(obj.albums_artist, f)
+    f.close()
+    f = open('albums_year.pickle', 'wb')
+    pickle.dump(obj.albums_year, f)
+    f.close()
 
 def set_playlist_clear(ip, port):
     '''Clear the audio playlist'''
@@ -787,9 +844,7 @@ class XBMCRemote(cmd.Cmd):
             The id is optional, an album is randomly selected without it.
         '''
         logging.debug('call function do_play_album')
-        print line
         album_id = parse_single_int(line)
-        print album_id
         if not album_id:
             logging.debug('no album id provided')
             album_id = 0
