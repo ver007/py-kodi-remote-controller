@@ -852,6 +852,35 @@ class XBMCRemote(cmd.Cmd):
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
         set_player_open(self.xbmc_ip, self.xbmc_port)
 
+    def do_play_what(self, line):
+        '''
+        Detail status of what is currently played.
+        Usage: play_what
+        '''
+        logging.debug('call function do_play_what')
+        command = {"jsonrpc": "2.0",
+                "method": "Player.GetItem",
+                "params": {
+                    "playerid": 0,
+                    "properties": [
+                        "album",
+                        "title",
+                        "artist",
+                        "playcount" ] },
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        command = {"jsonrpc": "2.0",
+                "method": "Player.GetProperties",
+                "params": {
+                    "playerid": 0,
+                    "properties": [
+                        "time",
+                        "totaltime",
+                        "partymode",
+                        "currentaudiostream"] },
+                "id": 1}
+        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+
     def do_EOF(self, line):
         '''Override end of file'''
         logging.debug('Bye!')
