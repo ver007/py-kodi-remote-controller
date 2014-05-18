@@ -171,9 +171,9 @@ def display_result(ret):
     '''Display command result for simple methods'''
     logging.debug('call display_result')
     if 'error' in ret:
-        logging.debug('too bad, something went wrong')
+        logging.error('too bad, something went wrong')
     else:
-        logging.debug('command processed successfully')
+        logging.info('command processed successfully')
 
 def get_nb_albums(ip, port):
     '''Give the total number of albums in the library'''
@@ -843,7 +843,7 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call function do_play_album')
         album_id = parse_single_int(line)
         if not album_id:
-            logging.debug('no album id provided')
+            logging.info('no album id provided')
             album_id = 0
         set_playlist_clear(self.xbmc_ip, self.xbmc_port)
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
@@ -880,7 +880,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_EOF(self, line):
         '''Override end of file'''
-        logging.debug('Bye!')
+        logging.info('Bye!')
         print 'Bye!'
         return True
 
