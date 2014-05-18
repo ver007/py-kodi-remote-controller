@@ -170,13 +170,10 @@ def set_player_open(ip, port):
 def display_result(ret):
     '''Display command result for simple methods'''
     logging.debug('call display_result')
-    if 'result' in ret:
-        if ret['result'] == 'OK':
-            print 'Command processed successfully'
-        else:
-            print 'Too bad, something went wrong'
+    if 'error' in ret:
+        logging.debug('too bad, something went wrong')
     else:
-        print "Weird, can't read the result"
+        logging.debug('command processed successfully')
 
 def get_nb_albums(ip, port):
     '''Give the total number of albums in the library'''
