@@ -1,6 +1,6 @@
 #!/usr/bin/env python
 #
-# Copyright 2013 Arn-O. See the LICENSE file at the top-level directory of this
+# Copyright 2014 Arn-O. See the LICENSE file at the top-level directory of this
 # distribution and at
 # https://github.com/Arn-O/py-xbmc-remote-controller/blob/master/LICENSE.
 
@@ -166,6 +166,38 @@ def set_player_open(ip, port):
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
+
+def get_item(ip, port):
+    '''Get the current played item'''
+    logging.debug('call function get_item')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.GetItem",
+            "params": {
+                "playerid": 0,
+                "properties": [
+                    "album",
+                    "title",
+                    "artist",
+                    "playcount" ] },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    return ret['result']['item']
+
+def get_properties(ip, port):
+    '''Get properties of the played item'''
+    logging.debug('call function get_properties')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.GetProperties",
+            "params": {
+                "playerid": 0,
+                "properties": [
+                    "time",
+                    "totaltime",
+                    "partymode",
+                    "currentaudiostream"] },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    return ret['result']
 
 def display_result(ret):
     '''Display command result for simple methods'''
@@ -855,28 +887,12 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_what
         '''
         logging.debug('call function do_play_what')
-        command = {"jsonrpc": "2.0",
-                "method": "Player.GetItem",
-                "params": {
-                    "playerid": 0,
-                    "properties": [
-                        "album",
-                        "title",
-                        "artist",
-                        "playcount" ] },
-                "id": 1}
-        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
-        command = {"jsonrpc": "2.0",
-                "method": "Player.GetProperties",
-                "params": {
-                    "playerid": 0,
-                    "properties": [
-                        "time",
-                        "totaltime",
-                        "partymode",
-                        "currentaudiostream"] },
-                "id": 1}
-        ret = call_api(self.xbmc_ip, self.xbmc_port, command)
+        item = get_item(self.xbmc_ip, self.xbmc_port)
+        properties = get_properties(self.xbmc_ip, self.xbmc_port)
+        print
+        print "%s - %s" % (item['artist'][0], item['album'])
+        print "   %s" % item['title']
+        print
 
     def do_EOF(self, line):
         '''Override end of file'''
