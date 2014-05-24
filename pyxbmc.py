@@ -73,6 +73,14 @@ def is_library_files():
     logging.debug('library files check: %s', ret)
     return ret
 
+def display_result(ret):
+    '''Display command result for simple methods'''
+    logging.debug('call display_result')
+    if 'error' in ret:
+        logging.error('too bad, something went wrong')
+    else:
+        logging.info('command processed successfully')
+
 def get_audio_library(obj):
     '''Manage lists for audio library, from a local file or the server'''
     logging.debug('call function get_audio_library')
@@ -133,6 +141,19 @@ def get_audio_library_from_server(obj):
     f = open('albums_year.pickle', 'wb')
     pickle.dump(obj.albums_year, f)
     f.close()
+
+def get_playlist_get_items(ip, port):
+    '''Get all items from the audio playlist'''
+    logging.debug('call get_playlist_get_items')
+    command = {"jsonrpc": "2.0",
+            "method": "Playlist.GetItems",
+            "params": {
+                "playlistid": 0,
+                "properties": ["title", "artist", "duration", "track"] },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    tracks = ret['result']['items']
+    return tracks
 
 def set_playlist_clear(ip, port):
     '''Clear the audio playlist'''
@@ -198,14 +219,6 @@ def get_properties(ip, port):
             "id": 1}
     ret = call_api(ip, port, command)
     return ret['result']
-
-def display_result(ret):
-    '''Display command result for simple methods'''
-    logging.debug('call display_result')
-    if 'error' in ret:
-        logging.error('too bad, something went wrong')
-    else:
-        logging.info('command processed successfully')
 
 def get_nb_albums(ip, port):
     '''Give the total number of albums in the library'''
@@ -861,6 +874,16 @@ class XBMCRemote(cmd.Cmd):
         print
         print 'Total number of albums: %i' % self.nb_albums
         print
+
+    # playlist functions
+
+    def do_playlist_show(self, line):
+        '''
+        Show the current audio playlist
+        Usage: playlist_show
+        '''
+        logging.debug('call function do_playlist_show')
+        tracks = get_playlist_get_items(self.xbmc_ip, self.xbmc_port)
 
     # play functions
 
