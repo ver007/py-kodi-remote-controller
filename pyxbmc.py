@@ -672,12 +672,13 @@ class XBMCRemote(cmd.Cmd):
                 "method": "Player.GetProperties",
                 "params": {
                     "playerid": 0,
-                    "properties": ["time", "totaltime"] },
+                    "properties": [
+                        "time",
+                        "totaltime", 
+                        "playlistid", 
+                        "position"] },
                 "id": 1}
-        logging.debug('command: %s', command)
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
-        logging.debug('return: %s', ret)
-        display_result(ret)
         
     def do_player_stop(self, line):
         '''
@@ -913,8 +914,12 @@ class XBMCRemote(cmd.Cmd):
         item = get_item(self.xbmc_ip, self.xbmc_port)
         properties = get_properties(self.xbmc_ip, self.xbmc_port)
         print
+        print 'Now Playing'
+        print
         print "%s - %s" % (item['artist'][0], item['album'])
         print "   %s" % item['title']
+        print
+        print 'Next:'
         print
 
     def do_EOF(self, line):
