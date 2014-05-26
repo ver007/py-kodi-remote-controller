@@ -11,13 +11,15 @@ Note: a couple of methods are currently covered (see Contributions)
 
 ## Quick start
 
-Clone this repo and from the folder, launch the script:
+First, you need to enable the [JSON-RPC][tcp] on XBMC to make it work.
+
+Clone this repo and from the root folder, launch the script:
 
 ```
-python pycontroller.py
+python pyxbmc.py
 ```
 
-Use the help command to have the list of available methods, and help + command to display a usage message.
+From the prompt, use the help command to have the list of available methods, and help + command to display a usage message.
 
 ## Contributions
 
@@ -59,3 +61,4 @@ In any doubt, I will be pleased to discuss with you.
 [3]: http://docs.python.org/2/library/json.html
 [4]: http://yatse.leetzone.org/redmine
 [5]: http://wiki.xbmc.org/index.php?title=JSON-RPC_API/Examples
+[tcp]: http://wiki.xbmc.org/?title=JSON-RPC_API#TCP
