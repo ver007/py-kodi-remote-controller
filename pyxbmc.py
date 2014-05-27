@@ -198,8 +198,7 @@ def get_item(ip, port):
                 "properties": [
                     "album",
                     "title",
-                    "artist",
-                    "playcount" ] },
+                    "artist" ] },
             "id": 1}
     ret = call_api(ip, port, command)
     return ret['result']['item']
@@ -214,8 +213,9 @@ def get_properties(ip, port):
                 "properties": [
                     "time",
                     "totaltime",
+                    "percentage",
                     "partymode",
-                    "currentaudiostream"] },
+                    "currentaudiostream" ] },
             "id": 1}
     ret = call_api(ip, port, command)
     return ret['result']
