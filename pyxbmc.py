@@ -21,9 +21,9 @@ import argparse
 BUFFER_SIZE = 2048
 DISPLAY_NB_LINES = 10
 
-# utilities functions
+# utility functions
 
-def get_xbmc_params():
+def get_pyxbmc_params():
     '''Get XBMC sever IP and port'''
     parser = argparse.ArgumentParser()
     parser.add_argument("ip",
@@ -37,6 +37,8 @@ def get_xbmc_params():
             help='Increase output verbosity')
     args = parser.parse_args()
     return args.ip, args.port, args.verbosity
+
+# API call management
 
 def call_api(ip, port, command):
     '''Send the command using TCP'''
@@ -52,6 +54,14 @@ def call_api(ip, port, command):
     ret = json.loads(data)
     logging.debug('return: %s', ret)
     return ret
+
+def display_result(ret):
+    '''Display command result for simple methods'''
+    logging.debug('call display_result')
+    if 'error' in ret:
+        logging.error('too bad, something went wrong')
+    else:
+        logging.info('command processed successfully')
 
 def is_file(fname):
     '''Return false if the file does not exist'''
@@ -72,14 +82,6 @@ def is_library_files():
     ret = ret and is_file('albums_year.pickle')
     logging.debug('library files check: %s', ret)
     return ret
-
-def display_result(ret):
-    '''Display command result for simple methods'''
-    logging.debug('call display_result')
-    if 'error' in ret:
-        logging.error('too bad, something went wrong')
-    else:
-        logging.info('command processed successfully')
 
 def get_audio_library(obj):
     '''Manage lists for audio library, from a local file or the server'''
@@ -142,6 +144,42 @@ def get_audio_library_from_server(obj):
     pickle.dump(obj.albums_year, f)
     f.close()
 
+# parsers
+
+def parse_single_int(line):
+    '''Parse line for a single int'''
+    logging.debug('call function parse_single_int')
+    args = str.split(line)
+    ret_val = None
+    #TODO: catch error instead of test
+    if len(args) == 1:
+        ret_val = int(args[0])
+    return ret_val
+
+def parse_get_int(line):
+    '''Parse line for an integer'''
+    if len(line) == 0:
+        ret_val = 0
+    else:
+        ret_val = int(line)
+    return ret_val
+
+def parse_get_limits(line):
+    '''Parse line and return start/end limits'''
+    if len(line) == 0:
+        start = 0
+    else:
+        start = int(line)
+    end = start + DISPLAY_NB_LINES
+    return (start, end)
+
+def parse_get_string(line):
+    '''Parse line and return the first string (without space)'''
+    args = str.split(line)
+    return args[0]
+
+# getters
+
 def get_playlist_get_items(ip, port):
     '''Get all items from the audio playlist'''
     logging.debug('call get_playlist_get_items')
@@ -154,39 +192,6 @@ def get_playlist_get_items(ip, port):
     ret = call_api(ip, port, command)
     tracks = ret['result']['items']
     return tracks
-
-def set_playlist_clear(ip, port):
-    '''Clear the audio playlist'''
-    logging.debug('call function set_playlist_clear')
-    command = {"jsonrpc": "2.0",
-            "method": "Playlist.Clear",
-            "params": {"playlistid": 0 },
-            "id": 1}
-    ret = call_api(ip, port, command)
-    display_result(ret)
-
-def set_playlist_add(album_id, ip, port):
-    '''Add an album to the audio playlist'''
-    logging.debug('call function set_playlist_add')
-    command = {"jsonrpc": "2.0",
-            "method": "Playlist.Add",
-            "params": {
-                "playlistid": 0,
-                "item": {"albumid": album_id } },
-            "id": 1}
-    ret = call_api(ip, port, command)
-    display_result(ret)
-
-def set_player_open(ip, port):
-    '''Open the audio playlist'''
-    logging.debug('call function set_player_open')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.Open",
-            "params": {
-                "item": {"playlistid": 0 } },
-            "id": 1}
-    ret = call_api(ip, port, command)
-    display_result(ret)
 
 def get_item(ip, port):
     '''Get the current played item'''
@@ -241,6 +246,42 @@ def get_album_info(album_id, ip, port):
     ret = call_api(ip, port, command)
     return ret['result']['albumdetails']
 
+# setters
+
+def set_playlist_clear(ip, port):
+    '''Clear the audio playlist'''
+    logging.debug('call function set_playlist_clear')
+    command = {"jsonrpc": "2.0",
+            "method": "Playlist.Clear",
+            "params": {"playlistid": 0 },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
+def set_playlist_add(album_id, ip, port):
+    '''Add an album to the audio playlist'''
+    logging.debug('call function set_playlist_add')
+    command = {"jsonrpc": "2.0",
+            "method": "Playlist.Add",
+            "params": {
+                "playlistid": 0,
+                "item": {"albumid": album_id } },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
+def set_player_open(ip, port):
+    '''Open the audio playlist'''
+    logging.debug('call function set_player_open')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Open",
+            "params": {
+                "item": {"playlistid": 0 } },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
+
 def disp_album_info(pos, album):
     '''Display album info in line'''
     logging.debug('call disp_album_info')
@@ -250,6 +291,8 @@ def disp_album_info(pos, album):
             album['artist'][0],
             album['year'],
             album['albumid'])
+
+# display functionq
 
 def display_albums(albums):
     '''Nice looking albums display'''
@@ -283,39 +326,6 @@ def display_playlist(tracks):
     print 'Total duration: %s' % str(timedelta(seconds=total_duration))
     print
 
-# parsers
-
-def parse_single_int(line):
-    '''Parse line for a single int'''
-    logging.debug('call function parse_single_int')
-    args = str.split(line)
-    ret_val = None
-    #TODO: catch error instead of test
-    if len(args) == 1:
-        ret_val = int(args[0])
-    return ret_val
-
-def parse_get_int(line):
-    '''Parse line for an integer'''
-    if len(line) == 0:
-        ret_val = 0
-    else:
-        ret_val = int(line)
-    return ret_val
-
-def parse_get_limits(line):
-    '''Parse line and return start/end limits'''
-    if len(line) == 0:
-        start = 0
-    else:
-        start = int(line)
-    end = start + DISPLAY_NB_LINES
-    return (start, end)
-
-def parse_get_string(line):
-    '''Parse line and return the first string (without space)'''
-    args = str.split(line)
-    return args[0]
 
 # process return messages
 
@@ -671,12 +681,13 @@ class XBMCRemote(cmd.Cmd):
         command = {"jsonrpc": "2.0",
                 "method": "Player.GetProperties",
                 "params": {
-                    "playerid": 0,
+                    "playerid": 1,
                     "properties": [
                         "time",
                         "totaltime", 
                         "playlistid", 
-                        "position"] },
+                        "position",
+                        "currentaudiostream"] },
                 "id": 1}
         ret = call_api(self.xbmc_ip, self.xbmc_port, command)
         
@@ -914,7 +925,7 @@ class XBMCRemote(cmd.Cmd):
         item = get_item(self.xbmc_ip, self.xbmc_port)
         properties = get_properties(self.xbmc_ip, self.xbmc_port)
         print
-        print 'Now Playing'
+        print 'Now Playing:'
         print
         print "%s - %s" % (item['artist'][0], item['album'])
         print "   %s" % item['title']
