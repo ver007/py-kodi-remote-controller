@@ -180,7 +180,7 @@ def parse_get_string(line):
 
 # getters
 
-def get_playlist_get_items(ip, port):
+def playlist_get_items(ip, port):
     '''Get all items from the audio playlist'''
     logging.debug('call get_playlist_get_items')
     command = {"jsonrpc": "2.0",
@@ -281,7 +281,7 @@ def set_player_open(ip, port):
     ret = call_api(ip, port, command)
     display_result(ret)
 
-# display functionq
+# display function
 
 def disp_album_info(pos, album):
     '''Display album info in line'''
@@ -292,6 +292,18 @@ def disp_album_info(pos, album):
             album['artist'][0],
             album['year'],
             album['albumid'])
+
+def disp_now_playing(item, properties):
+    '''Display the now playing part of display_what'''
+    print
+    print 'Now Playing:'
+    print
+    print "%s - %s" % (item['artist'][0], item['album'])
+    print "   %s" % item['title']
+
+
+def disp_next_playing(properties, items):
+    print
 
 def __display_albums(albums):
     '''Nice looking albums display'''
@@ -375,7 +387,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
-        tracks = get_playlist_get_items(self.xbmc_ip, self.xbmc_port)
+        tracks = playlist_get_items(self.xbmc_ip, self.xbmc_port)
 
     # play functions
 
@@ -404,14 +416,9 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call function do_play_what')
         item = get_item(self.xbmc_ip, self.xbmc_port)
         properties = get_properties(self.xbmc_ip, self.xbmc_port)
-        print
-        print 'Now Playing:'
-        print
-        print "%s - %s" % (item['artist'][0], item['album'])
-        print "   %s" % item['title']
-        print
-        print 'Next:'
-        print
+        items = playlist_get_items(self.xbmc_ip, self.xbmc_port)
+        disp_now_playing(item, properties)
+        disp_next_playing(properties, items)
 
     def do_EOF(self, line):
         '''Override end of file'''
