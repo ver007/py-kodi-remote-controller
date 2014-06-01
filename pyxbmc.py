@@ -72,6 +72,8 @@ def is_file(fname):
         return False
     return True
 
+# local files
+
 def is_library_files():
     '''Check if there are library local files'''
     logging.debug('call function is_library_files')
@@ -190,6 +192,7 @@ def playlist_get_items(ip, port):
                 "properties": ["title", "artist", "duration", "track"] },
             "id": 1}
     ret = call_api(ip, port, command)
+    display_result(ret)
     tracks = ret['result']['items']
     return tracks
 
@@ -203,9 +206,12 @@ def get_item(ip, port):
                 "properties": [
                     "album",
                     "title",
-                    "artist" ] },
+                    "artist",
+                    "year",
+                    "rating" ] },
             "id": 1}
     ret = call_api(ip, port, command)
+    display_result(ret)
     return ret['result']['item']
 
 def get_properties(ip, port):
@@ -218,11 +224,10 @@ def get_properties(ip, port):
                 "properties": [
                     "time",
                     "totaltime",
-                    "percentage",
-                    "partymode",
-                    "currentaudiostream" ] },
+                    "percentage" ] },
             "id": 1}
     ret = call_api(ip, port, command)
+    display_result(ret)
     return ret['result']
 
 def get_nb_albums(ip, port):
@@ -233,9 +238,10 @@ def get_nb_albums(ip, port):
                 "limits": { "start": 0, "end": 1 } },
             "id": 1}
     ret = call_api(ip, port, command)
+    display_result(ret)
     return ret['result']['limits']['total']
 
-def get_album_info(album_id, ip, port):
+def __get_album_info(album_id, ip, port):
     '''Query info for a single album'''
     command = {"jsonrpc": "2.0",
             "method": "AudioLibrary.GetAlbumDetails",
@@ -244,6 +250,7 @@ def get_album_info(album_id, ip, port):
                 "properties": ["title", "artist", "year"] },
             "id": 1}
     ret = call_api(ip, port, command)
+    display_result(ret)
     return ret['result']['albumdetails']
 
 # setters
@@ -293,14 +300,29 @@ def disp_album_info(pos, album):
             album['year'],
             album['albumid'])
 
+def pretty_time(time):
+    '''Pretty printer for time data'''
+    time_str = str(time['hours'])
+    time_str += ':'
+    time_str += str(time['minutes'])
+    time_str += ':'
+    time_str += str(time['seconds'])
+    return time_str
+
 def disp_now_playing(item, properties):
     '''Display the now playing part of display_what'''
+    disp_rating = '.....'
+    for i in range(item['rating']):
+        disp_rating[i] = '*'
     print
     print 'Now Playing:'
     print
-    print "%s - %s" % (item['artist'][0], item['album'])
-    print "   %s" % item['title']
-
+    print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
+    print "   %s - [%s]" % (item['title'], disp_rating)
+    print "   %s / %s - " % (
+            pretty_time(properties['time']),
+            pretty_time(properties['totaltime']) )
+    print properties['percentage']
 
 def disp_next_playing(properties, items):
     print
