@@ -241,18 +241,6 @@ def get_nb_albums(ip, port):
     display_result(ret)
     return ret['result']['limits']['total']
 
-def __get_album_info(album_id, ip, port):
-    '''Query info for a single album'''
-    command = {"jsonrpc": "2.0",
-            "method": "AudioLibrary.GetAlbumDetails",
-            "params": {
-                "albumid": album_id,
-                "properties": ["title", "artist", "year"] },
-            "id": 1}
-    ret = call_api(ip, port, command)
-    display_result(ret)
-    return ret['result']['albumdetails']
-
 # setters
 
 def set_playlist_clear(ip, port):
@@ -300,15 +288,6 @@ def disp_album_info(pos, album):
             album['year'],
             album['albumid'])
 
-def pretty_time(time):
-    '''Pretty printer for time data'''
-    time_str = str(time['hours'])
-    time_str += ':'
-    time_str += str(time['minutes'])
-    time_str += ':'
-    time_str += str(time['seconds'])
-    return time_str
-
 def disp_now_playing(item, properties):
     '''Display the now playing part of display_what'''
     disp_rating = '.....'
@@ -319,10 +298,14 @@ def disp_now_playing(item, properties):
     print
     print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
     print "   %s - [%s]" % (item['title'], disp_rating)
-    print "   %s / %s - " % (
-            pretty_time(properties['time']),
-            pretty_time(properties['totaltime']) )
-    print properties['percentage']
+    print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
+            properties['time']['hours'],
+            properties['time']['minutes'],
+            properties['time']['seconds'],
+            properties['totaltime']['hours'],
+            properties['totaltime']['minutes'],
+            properties['totaltime']['seconds'],
+            properties['percentage'] )
 
 def disp_next_playing(properties, items):
     print
