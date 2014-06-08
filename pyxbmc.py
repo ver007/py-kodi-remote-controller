@@ -310,38 +310,6 @@ def disp_now_playing(item, properties):
 def disp_next_playing(properties, items):
     print
 
-def __display_albums(albums):
-    '''Nice looking albums display'''
-    logging.debug('call display_albums')
-    print 'Recently added albums:'
-    print
-    for i, album in enumerate(albums):
-        print ('%i. %s by %s (%s) - id: %i') % (
-                i,
-                album['title'],
-                album['artist'][0],
-                album['year'],
-                album['albumid'])
-    print
-
-def __display_playlist(tracks):
-    '''Nice looking playlist display'''
-    logging.debug('call display_albums')
-    print 'Playlist audio:'
-    print
-    total_duration = 0
-    for i, track in enumerate(tracks):
-        print ('%i / %i - %s by %s - %s') % (
-                i + 1,
-                len(tracks),
-                track['title'],
-                track['artist'][0],
-                str(timedelta(seconds=track['duration'])))
-        total_duration += track['duration']
-    print
-    print 'Total duration: %s' % str(timedelta(seconds=total_duration))
-    print
-
 # process return messages
 
 class XBMCRemote(cmd.Cmd):
