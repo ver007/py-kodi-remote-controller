@@ -224,7 +224,8 @@ def get_properties(ip, port):
                 "properties": [
                     "time",
                     "totaltime",
-                    "percentage" ] },
+                    "percentage",
+                    "position" ] },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -308,6 +309,13 @@ def disp_now_playing(item, properties):
             properties['percentage'] )
 
 def disp_next_playing(properties, items):
+    '''Display the next playing part of display_what'''
+    print
+    print "(%i / %i) - Next: %s - %s" % (
+            properties['position'] + 1, 
+            len(items),
+            items[properties['position'] + 1]['artist'][0],
+            items[properties['position'] + 1]['title'] )
     print
 
 # process return messages
