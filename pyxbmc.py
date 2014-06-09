@@ -320,7 +320,7 @@ def disp_playlist(position, tracks):
         else:
             print "   ",
         print "%02d. %s - %s" % (
-                track['track'],
+                i + 1,
                 track['artist'][0],
                 track['title'] )
     print
