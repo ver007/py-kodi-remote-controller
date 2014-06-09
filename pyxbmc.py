@@ -288,6 +288,16 @@ def set_player_play_pause(ip, port):
     ret = call_api(ip, port, command)
     display_result(ret)
 
+def set_player_stop(ip, port):
+    '''Stops playback'''
+    logging.debug('call function set_player_stop')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Stop",
+            "params": {
+                "playerid": 0 },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
 # display function
 
 def disp_album_info(pos, album):
@@ -408,6 +418,15 @@ class XBMCRemote(cmd.Cmd):
         '''
         logging.debug('call function do_play_pause')
         set_player_play_pause(self.xbmc_ip, self.xbmc_port)
+
+    def do_play_stop(self, line):
+        '''
+        Stop the music.  
+        Usage: play_stop
+            Stop the music and go home, I repeat, stop the music and go home.
+        '''
+        logging.debug('call function do_play_stop')
+        set_player_stop(self.xbmc_ip, self.xbmc_port)
 
     def do_play_what(self, line):
         '''
