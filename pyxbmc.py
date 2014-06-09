@@ -277,6 +277,17 @@ def set_player_open(ip, port):
     ret = call_api(ip, port, command)
     display_result(ret)
 
+def set_player_play_pause(ip, port):
+    '''Pauses or unpause playback and returns the new state'''
+    logging.debug('call function set_player_play_pause')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.PlayPause",
+            "params": {
+                "playerid": 0 },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
 # display function
 
 def disp_album_info(pos, album):
@@ -388,6 +399,15 @@ class XBMCRemote(cmd.Cmd):
         set_playlist_clear(self.xbmc_ip, self.xbmc_port)
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
         set_player_open(self.xbmc_ip, self.xbmc_port)
+
+    def do_play_pause(self, line):
+        '''
+        Switch to play or pause.  
+        Usage: play_pause
+            Switch to pause if playing, switch to play if in pause.
+        '''
+        logging.debug('call function do_play_pause')
+        set_player_play_pause(self.xbmc_ip, self.xbmc_port)
 
     def do_play_what(self, line):
         '''
