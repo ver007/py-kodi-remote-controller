@@ -298,6 +298,7 @@ def set_player_stop(ip, port):
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
+
 # display function
 
 def disp_album_info(pos, album):
@@ -309,6 +310,20 @@ def disp_album_info(pos, album):
             album['artist'][0],
             album['year'],
             album['albumid'])
+
+def disp_playlist(position, tracks):
+    '''Display playlist'''
+    print
+    for i, track in enumerate(tracks):
+        if i == position:
+            print ">> ",
+        else:
+            print "   ",
+        print "%02d. %s - %s" % (
+                track['track'],
+                track['artist'][0],
+                track['title'] )
+    print
 
 def disp_now_playing(item, properties):
     '''Display the now playing part of display_what'''
@@ -369,6 +384,7 @@ class XBMCRemote(cmd.Cmd):
         '''
         logging.debug('call function do_albums_random')
         albums_pos = random.sample(xrange(self.nb_albums), DISPLAY_NB_LINES)
+        #TODO: move the following lines into a display function
         print
         for i, album_pos in enumerate(albums_pos):
             album = {}
@@ -389,7 +405,9 @@ class XBMCRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
+        properties = get_properties(self.xbmc_ip, self.xbmc_port)
         tracks = playlist_get_items(self.xbmc_ip, self.xbmc_port)
+        disp_playlist(properties['position'], tracks)
 
     # play functions
 
