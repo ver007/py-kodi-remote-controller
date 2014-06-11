@@ -56,6 +56,8 @@ def call_api(ip, port, command):
         logging.debug('number of open brackets: %i', nb_open_brackets)
         if nb_open_brackets == 0:
             break
+        else:
+            logging.info('api reception incomplete')
     s.close()
     logging.debug('data length: %i', len(data))
     ret = json.loads(data)
@@ -418,19 +420,28 @@ class XBMCRemote(cmd.Cmd):
 
     def do_playlist_add(self, line):
         '''
-        Add an album to the  playlist
+        Add an album to the playlist
         Usage: playlist_add [id]
             Add the album id to the current playlist.
             Use the albums function to find the id.
             The id is optional, an album is randomly selected without it.
         '''
-        logging.debug('call function do_play_album')
+        logging.debug('call function do_playlist_add')
         album_id = parse_single_int(line)
         #TODO select random album if no album id
         if not album_id:
             logging.info('no album id provided')
             album_id = 0
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+
+    def do_playlist_clear(self, line):
+        '''
+        Clear the playlist
+        Usage: playlist_clear
+            Remove all items from the current playlist.
+        '''
+        logging.debug('call function do_playlist_clear')
+        set_playlist_clear(self.xbmc_ip, self.xbmc_port)
 
     # play functions
 
