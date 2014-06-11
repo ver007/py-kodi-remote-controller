@@ -428,10 +428,10 @@ class XBMCRemote(cmd.Cmd):
         '''
         logging.debug('call function do_playlist_add')
         album_id = parse_single_int(line)
-        #TODO select random album if no album id
         if not album_id:
             logging.info('no album id provided')
-            album_id = 0
+            album_id = random.randrange(self.nb_albums)
+            print "Album %i will be added to the playlist" % album_id
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
 
     def do_playlist_clear(self, line):
@@ -455,10 +455,10 @@ class XBMCRemote(cmd.Cmd):
         '''
         logging.debug('call function do_play_album')
         album_id = parse_single_int(line)
-        #TODO select random album if no album id
         if not album_id:
             logging.info('no album id provided')
-            album_id = 0
+            album_id = random.randrange(self.nb_albums)
+            print "Album %i will be played" % album_id
         set_playlist_clear(self.xbmc_ip, self.xbmc_port)
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
         set_player_open(self.xbmc_ip, self.xbmc_port)
