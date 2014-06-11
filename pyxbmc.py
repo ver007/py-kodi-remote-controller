@@ -18,7 +18,7 @@ import logging
 import argparse
 
 # global constants
-BUFFER_SIZE = 2048
+BUFFER_SIZE = 1024
 DISPLAY_NB_LINES = 10
 
 # utility functions
@@ -46,11 +46,18 @@ def call_api(ip, port, command):
     s.connect((ip, port))
     logging.debug('command: %s', command)
     s.send(json.dumps(command))
-    data = s.recv(BUFFER_SIZE)
+    data = ''
+    while True:
+        filler = s.recv(BUFFER_SIZE)
+        logging.debug('data received: %s', filler)
+        logging.debug('length of the filler: %i', len(filler))
+        data += filler
+        nb_open_brackets = data.count('{') - data.count('}')
+        logging.debug('number of open brackets: %i', nb_open_brackets)
+        if nb_open_brackets == 0:
+            break
     s.close()
     logging.debug('data length: %i', len(data))
-    if len(data) == BUFFER_SIZE:
-        logging.warning('return is the size of the buffer')
     ret = json.loads(data)
     logging.debug('return: %s', ret)
     return ret
