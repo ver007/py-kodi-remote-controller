@@ -189,6 +189,22 @@ def parse_get_string(line):
     args = str.split(line)
     return args[0]
 
+# other
+
+def get_albums_search(search_string, obj):
+    '''Internal album indexes for a string search'''
+    search_result_title = []
+    for i, album_title in enumerate(obj.albums_title):
+        if search_string in album_title:
+            search_result_title.append(i)
+    search_result_artist = []
+    logging.debug('search result by title: %s', search_result_title)
+    for i, album_artist in enumerate(obj.albums_artist):
+        if search_string in album_artist[0]:
+            search_result_artist.append(i)
+    logging.debug('search result by artist: %s', search_result_artist)
+    return sorted(list(set(search_result_title + search_result_artist)))
+
 # getters
 
 def playlist_get_items(ip, port):
@@ -310,15 +326,20 @@ def set_player_stop(ip, port):
 
 # display function
 
-def disp_album_info(pos, album):
-    '''Display album info in line'''
-    logging.debug('call disp_album_info')
-    print ('%i. %s by %s (%s) - id: %i') % (
-            pos,
-            album['title'],
-            album['artist'][0],
-            album['year'],
-            album['albumid'])
+def disp_albums_index(albums_pos, obj):
+    '''Display albums list from internal index'''
+    logging.debug('call disp_albums_index')
+    print
+    for i, album_pos in enumerate(albums_pos):
+        print ("%i. %s by %s (%s) [%i]") % (
+                i,
+                obj.albums_title[album_pos],
+                obj.albums_artist[album_pos][0],
+                obj.albums_year[album_pos],
+                obj.albums_id[album_pos] )
+    print
+    print "Total number of albums: %i" % obj.nb_albums
+    print
 
 def disp_playlist(position, tracks):
     '''Display playlist'''
@@ -388,23 +409,22 @@ class XBMCRemote(cmd.Cmd):
 
     def do_albums_random(self, line):
         '''
-        Display a random selection of albums.
+        Display a random selection of albums
         Usage: albums_random
         '''
         logging.debug('call function do_albums_random')
         albums_pos = random.sample(xrange(self.nb_albums), DISPLAY_NB_LINES)
-        #TODO: move the following lines into a display function
-        print
-        for i, album_pos in enumerate(albums_pos):
-            album = {}
-            album['albumid'] = self.albums_id[album_pos]
-            album['title'] = self.albums_title[album_pos]
-            album['artist'] = self.albums_artist[album_pos]
-            album['year'] = self.albums_year[album_pos]
-            disp_album_info(i, album)            
-        print
-        print 'Total number of albums: %i' % self.nb_albums
-        print
+        disp_albums_index(albums_pos, self)
+
+    def do_albums_search(self, line):
+        '''
+        Search into the albums.
+        Usage: albums_search string
+            List all albums containing the string in the title or artist
+        '''
+        logging.debug('call function do_albums_search')
+        albums_pos = get_albums_search(line, self)
+        disp_albums_index(albums_pos, self)
 
     # playlist functions
 
@@ -420,7 +440,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_playlist_add(self, line):
         '''
-        Add an album to the playlist
+        Add an album to the playlist.
         Usage: playlist_add [id]
             Add the album id to the current playlist.
             Use the albums function to find the id.
@@ -447,7 +467,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_play_album(self, line):
         '''
-        Play a single album.  
+        Play a single album
         Usage: play_album [id]
             Play the album behind the id.
             Use the albums function to find the id.
@@ -465,7 +485,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_play_pause(self, line):
         '''
-        Switch to play or pause.  
+        Switch to play or pause
         Usage: play_pause
             Switch to pause if playing, switch to play if in pause.
         '''
@@ -474,7 +494,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_play_stop(self, line):
         '''
-        Stop the music.  
+        Stop the music
         Usage: play_stop
             Stop the music and go home, I repeat, stop the music and go home.
         '''
@@ -483,7 +503,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_play_what(self, line):
         '''
-        Detail status of what is currently played.
+        Detail status of what is currently played
         Usage: play_what
         '''
         logging.debug('call function do_play_what')
