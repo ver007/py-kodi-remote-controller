@@ -448,6 +448,17 @@ class XBMCRemote(cmd.Cmd):
                 page_nb * DISPLAY_NB_LINES )
         disp_albums_index(albums_pos, self)
 
+    def do_albums_recent(self, line):
+        '''
+        Display recently added albums
+        Usage: albums_recent
+        '''
+        logging.debug('call function do_albums_recent')
+        albums_pos = range(
+                self.nb_albums - DISPLAY_NB_LINES, 
+                self.nb_albums)
+        disp_albums_index(albums_pos, self)
+
     def do_albums_search(self, line):
         '''
         Search into the albums
