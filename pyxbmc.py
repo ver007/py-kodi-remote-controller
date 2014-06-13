@@ -195,12 +195,12 @@ def get_albums_search(search_string, obj):
     '''Internal album indexes for a string search'''
     search_result_title = []
     for i, album_title in enumerate(obj.albums_title):
-        if search_string in album_title:
+        if search_string in album_title.lower():
             search_result_title.append(i)
     search_result_artist = []
     logging.debug('search result by title: %s', search_result_title)
     for i, album_artist in enumerate(obj.albums_artist):
-        if search_string in album_artist[0]:
+        if search_string in album_artist[0].lower():
             search_result_artist.append(i)
     logging.debug('search result by artist: %s', search_result_artist)
     return sorted(list(set(search_result_title + search_result_artist)))
@@ -341,8 +341,8 @@ def disp_albums_index(albums_pos, obj):
     logging.debug('call disp_albums_index')
     print
     for i, album_pos in enumerate(albums_pos):
-        print ("%i. %s by %s (%s) [%i]") % (
-                i,
+        print ("%02i. %s by %s (%s) [%i]") % (
+                i + 1,
                 obj.albums_title[album_pos],
                 obj.albums_artist[album_pos][0],
                 obj.albums_year[album_pos],
@@ -417,6 +417,9 @@ class XBMCRemote(cmd.Cmd):
         # customize prompt
         sys_name = system_friendly_name(self.xbmc_ip, self.xbmc_port)
         self.prompt = "(" + sys_name + ") "
+        # welcome message
+        print "For a quick start, try play_album"
+        print
 
     # albums functions
 
@@ -436,7 +439,8 @@ class XBMCRemote(cmd.Cmd):
             List all albums containing the string in the title or artist
         '''
         logging.debug('call function do_albums_search')
-        albums_pos = get_albums_search(line, self)
+        search_string = line.lower()
+        albums_pos = get_albums_search(search_string, self)
         disp_albums_index(albums_pos, self)
 
     # playlist functions
