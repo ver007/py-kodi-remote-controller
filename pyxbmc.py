@@ -33,7 +33,7 @@ def get_pyxbmc_params():
             default=9090,
             help='TCP port of the XBMC server')
     parser.add_argument("-v", "--verbosity",
-            action="store_true",
+            action="count",
             help='Increase output verbosity')
     args = parser.parse_args()
     return args.ip, args.port, args.verbosity
@@ -403,9 +403,12 @@ class XBMCRemote(cmd.Cmd):
     def preloop(self):
         '''Override and used for class variable'''
         (self.xbmc_ip, self.xbmc_port, verbosity) = get_pyxbmc_params()
-        if verbosity:
+        if verbosity == 2:
             logging.basicConfig(level=logging.DEBUG)
-        logging.info('XBMC controller started in verbosity mode')
+        elif verbosity == 1:
+            logging.basicConfig(level=logging.INFO)
+        logging.info('XBMC controller started in verbosity mode ...')
+        logging.debug('... and even in high verbosity mode!')
         # initialize library description
         self.nb_albums = 0
         self.albums_id = []
