@@ -432,11 +432,27 @@ class XBMCRemote(cmd.Cmd):
         albums_pos = random.sample(xrange(self.nb_albums), DISPLAY_NB_LINES)
         disp_albums_index(albums_pos, self)
 
+    def do_albums_page(self, line):
+        '''
+        Display a given page of the albums library
+        Usage: albums_page [page]
+            The page is optional, a random page is displayed without it.
+        '''
+        logging.debug('call function do_albums_page')
+        page_nb = parse_single_int(line)
+        if not page_nb:
+            logging.info('no page number provided')
+            page_nb = random.randrange(int(self.nb_albums / 10) + 1)
+        albums_pos = range(
+                (page_nb - 1)  * DISPLAY_NB_LINES, 
+                page_nb * DISPLAY_NB_LINES )
+        disp_albums_index(albums_pos, self)
+
     def do_albums_search(self, line):
         '''
-        Search into the albums.
+        Search into the albums
         Usage: albums_search string
-            List all albums containing the string in the title or artist
+            List all albums containing the string in the title or artist.
         '''
         logging.debug('call function do_albums_search')
         search_string = line.lower()
@@ -457,7 +473,7 @@ class XBMCRemote(cmd.Cmd):
 
     def do_playlist_add(self, line):
         '''
-        Add an album to the playlist.
+        Add an album to the playlist
         Usage: playlist_add [id]
             Add the album id to the current playlist.
             Use the albums function to find the id.
