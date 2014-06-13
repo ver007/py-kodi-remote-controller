@@ -256,6 +256,16 @@ def get_properties(ip, port):
     display_result(ret)
     return ret['result']
 
+def system_friendly_name(ip, port):
+    '''Get the system name and hostname'''
+    command = {"jsonrpc": "2.0",
+            "method": "XBMC.GetInfoLabels",
+            "params": {
+                "labels": ["System.FriendlyName"] },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    return ret['result']['System.FriendlyName']
+
 def get_nb_albums(ip, port):
     '''Give the total number of albums in the library'''
     command = {"jsonrpc": "2.0",
@@ -404,6 +414,9 @@ class XBMCRemote(cmd.Cmd):
         self.albums_year = []
         # fill data
         get_audio_library(self)
+        # customize prompt
+        sys_name = system_friendly_name(self.xbmc_ip, self.xbmc_port)
+        self.prompt = "(" + sys_name + ") "
 
     # albums functions
 
