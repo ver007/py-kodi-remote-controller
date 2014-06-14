@@ -248,7 +248,12 @@ def get_item(ip, port):
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
-    return ret['result']['item']
+    item = None
+    try:
+        item = ret['result']['item']
+    except KeyError:
+        pass
+    return item
 
 def get_properties(ip, port):
     '''Get properties of the played item'''
@@ -281,6 +286,7 @@ def system_friendly_name(ip, port):
                 "labels": ["System.FriendlyName"] },
             "id": 1}
     ret = call_api(ip, port, command)
+    display_result(ret)
     return ret['result']['System.FriendlyName']
 
 def get_nb_albums(ip, port):
@@ -391,32 +397,36 @@ def disp_playlist(properties, tracks):
 
 def disp_now_playing(item, properties):
     '''Display the now playing part of display_what'''
-    disp_rating = '.....'
-    for i in range(item['rating']):
-        disp_rating[i] = '*'
     print
-    print 'Now Playing:'
-    print
-    print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
-    print "   %s - [%s]" % (item['title'], disp_rating)
-    print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
-            properties['time']['hours'],
-            properties['time']['minutes'],
-            properties['time']['seconds'],
-            properties['totaltime']['hours'],
-            properties['totaltime']['minutes'],
-            properties['totaltime']['seconds'],
-            properties['percentage'] )
+    if item:
+        disp_rating = '.....'
+        for i in range(item['rating']):
+            disp_rating[i] = '*'
+        print 'Now Playing:'
+        print
+        print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
+        print "   %s - [%s]" % (item['title'], disp_rating)
+        print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
+                properties['time']['hours'],
+                properties['time']['minutes'],
+                properties['time']['seconds'],
+                properties['totaltime']['hours'],
+                properties['totaltime']['minutes'],
+                properties['totaltime']['seconds'],
+                properties['percentage'] )
+    else:
+        print "[not playing anything]"
 
 def disp_next_playing(properties, items):
     '''Display the next playing part of display_what'''
     print
-    print "(%i / %i) - Next: %s - %s" % (
-            properties['position'] + 1, 
-            len(items),
-            items[properties['position'] + 1]['artist'][0],
-            items[properties['position'] + 1]['title'] )
-    print
+    if properties:
+        print "(%i / %i) - Next: %s - %s" % (
+                properties['position'] + 1, 
+                len(items),
+                items[properties['position'] + 1]['artist'][0],
+                items[properties['position'] + 1]['title'] )
+        print
 
 # process return messages
 
