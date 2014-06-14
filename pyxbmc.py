@@ -123,25 +123,32 @@ def get_audio_library_from_files(obj):
 def get_audio_library_from_server(obj):
     '''Load the library in memory from the XBMC server'''
     logging.debug('get_audio_library_from_server')
+    print "Loading the XBMC server library, this may be very long"
     nb_albums = get_nb_albums(obj.xbmc_ip, obj.xbmc_port)
+    logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
     limits = range(0, nb_albums, 10)
     if not limits[-1] == nb_albums:
         limits.append(nb_albums)
     for start, end in zip(limits[:-1], limits[1:]):
-        print 'Processing album %i to %i ...' % (start, end)
-        command = {"jsonrpc": "2.0",
-                "method": "AudioLibrary.GetAlbums",
-                "params": {
-                    "properties": ["title", "artist", "year"],
-                    "limits": { "start": start, "end": end } },
-                "id": 1}
-        ret = call_api(obj.xbmc_ip, obj.xbmc_port, command)
-        for album in ret['result']['albums']:
-            obj.albums_id.append(album['albumid'])
-            obj.albums_title.append(album['title'])
-            obj.albums_artist.append(album['artist'])
-            obj.albums_year.append(album['year'])
+        logging.debug('Processing album %i to %i ...', start, end)
+        while True:
+            try:
+                command = {"jsonrpc": "2.0",
+                        "method": "AudioLibrary.GetAlbums",
+                         "params": {
+                            "properties": ["title", "artist", "year"],
+                            "limits": { "start": start, "end": end } },
+                        "id": 1}
+                ret = call_api(obj.xbmc_ip, obj.xbmc_port, command)
+                for album in ret['result']['albums']:
+                    obj.albums_id.append(album['albumid'])
+                    obj.albums_title.append(album['title'])
+                    obj.albums_artist.append(album['artist'])
+                    obj.albums_year.append(album['year'])
+                break
+            except KeyError:
+                logging.info('error when loading library, retry')
     f = open('albums_id.pickle', 'wb')
     pickle.dump(obj.albums_id, f)
     f.close()
