@@ -218,7 +218,11 @@ def playlist_get_items(ip, port):
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
-    tracks = ret['result']['items']
+    tracks = None
+    try:
+        tracks = ret['result']['items']
+    except KeyError:
+        pass
     return tracks
 
 def get_item(ip, port):
@@ -364,15 +368,18 @@ def disp_playlist(properties, tracks):
     else:
         position = -1
     print
-    for i, track in enumerate(tracks):
-        if i == position:
-            print ">> ",
-        else:
-            print "   ",
-        print "%02d. %s - %s" % (
-                track['track'],
-                track['artist'][0],
-                track['title'] )
+    if tracks:
+        for i, track in enumerate(tracks):
+            if i == position:
+                print ">> ",
+            else:
+                print "   ",
+            print "%02d. %s - %s" % (
+                    track['track'],
+                    track['artist'][0],
+                    track['title'] )
+    else:
+        print "[playlist empty]"
     print
 
 def disp_now_playing(item, properties):
