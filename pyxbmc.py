@@ -254,7 +254,13 @@ def get_properties(ip, port):
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
-    return ret['result']
+    result = None
+    try:
+        result = ret['result']
+    except KeyError:
+        logging.debug('no properties found, player not active')
+        pass
+    return result
 
 def system_friendly_name(ip, port):
     '''Get the system name and hostname'''
@@ -351,8 +357,12 @@ def disp_albums_index(albums_pos, obj):
     print "Total number of albums: %i" % obj.nb_albums
     print
 
-def disp_playlist(position, tracks):
+def disp_playlist(properties, tracks):
     '''Display playlist'''
+    if properties:
+        position = properties['position']
+    else:
+        position = -1
     print
     for i, track in enumerate(tracks):
         if i == position:
@@ -483,7 +493,7 @@ class XBMCRemote(cmd.Cmd):
         logging.debug('call function do_playlist_show')
         properties = get_properties(self.xbmc_ip, self.xbmc_port)
         tracks = playlist_get_items(self.xbmc_ip, self.xbmc_port)
-        disp_playlist(properties['position'], tracks)
+        disp_playlist(properties, tracks)
 
     def do_playlist_add(self, line):
         '''
@@ -529,6 +539,14 @@ class XBMCRemote(cmd.Cmd):
         set_playlist_clear(self.xbmc_ip, self.xbmc_port)
         set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
         set_player_open(self.xbmc_ip, self.xbmc_port)
+
+    def do_play_party(self, line):
+        '''
+        Start a big party!
+        Usage: play_party
+        '''
+        logging.debug('call function do_play_party')
+        # set_player_open(self.xbmc_ip, self.xbmc_port)
 
     def do_play_pause(self, line):
         '''
