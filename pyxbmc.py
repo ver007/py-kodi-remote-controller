@@ -137,8 +137,13 @@ def get_audio_library_from_server(obj):
                 command = {"jsonrpc": "2.0",
                         "method": "AudioLibrary.GetAlbums",
                          "params": {
-                            "properties": ["title", "artist", "year"],
-                            "limits": { "start": start, "end": end } },
+                            "properties": [
+                                "title", 
+                                "artist", 
+                                "year"],
+                            "limits": { 
+                                "start": start, 
+                                "end": end } },
                         "id": 1}
                 ret = call_api(obj.xbmc_ip, obj.xbmc_port, command)
                 for album in ret['result']['albums']:
@@ -169,9 +174,10 @@ def parse_single_int(line):
     logging.debug('call function parse_single_int')
     args = str.split(line)
     ret_val = None
-    #TODO: catch error instead of test
-    if len(args) == 1:
+    try:
         ret_val = int(args[0])
+    except IndexError:
+        pass
     return ret_val
 
 def parse_get_int(line):
@@ -344,6 +350,18 @@ def player_open(ip, port):
     ret = call_api(ip, port, command)
     display_result(ret)
 
+def player_open_party(ip, port):
+    '''Open the audio player in partymode'''
+    logging.debug('call function player_open_party')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Open",
+            "params": {
+                "item": {
+                    "partymode": "music" } },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
 def player_play_pause(ip, port):
     '''Pauses or unpause playback and returns the new state'''
     logging.debug('call function player_play_pause')
@@ -362,18 +380,6 @@ def player_stop(ip, port):
             "method": "Player.Stop",
             "params": {
                 "playerid": 0 },
-            "id": 1}
-    ret = call_api(ip, port, command)
-    display_result(ret)
-
-def set_player_set_partymode(ip, port):
-    '''Turn partymode on or off'''
-    logging.debug('call function set_player_set_partymode')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.SetPartymode",
-            "params": {
-                "playerid": 0 ,
-                "partymode": True},
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -591,8 +597,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_party
         '''
         logging.debug('call function do_play_party')
-        set_player_set_partymode(self.xbmc_ip, self.xbmc_port)
-        # set_player_open(self.xbmc_ip, self.xbmc_port)
+        player_open_party(self.xbmc_ip, self.xbmc_port)
 
     def do_play_pause(self, line):
         '''
