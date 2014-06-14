@@ -216,12 +216,16 @@ def get_albums_search(search_string, obj):
 
 def playlist_get_items(ip, port):
     '''Get all items from the audio playlist'''
-    logging.debug('call get_playlist_get_items')
+    logging.debug('call playlist_get_items')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.GetItems",
             "params": {
                 "playlistid": 0,
-                "properties": ["title", "artist", "duration", "track"] },
+                "properties": [
+                    "title", 
+                    "artist", 
+                    "duration", 
+                    "track"] },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -294,7 +298,9 @@ def get_nb_albums(ip, port):
     command = {"jsonrpc": "2.0",
             "method": "AudioLibrary.GetAlbums",
             "params": {
-                "limits": { "start": 0, "end": 1 } },
+                "limits": {
+                    "start": 0, 
+                    "end": 1 } },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -302,42 +308,45 @@ def get_nb_albums(ip, port):
 
 # setters
 
-def set_playlist_clear(ip, port):
+def playlist_clear(ip, port):
     '''Clear the audio playlist'''
-    logging.debug('call function set_playlist_clear')
+    logging.debug('call function playlist_clear')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.Clear",
-            "params": {"playlistid": 0 },
+            "params": {
+                "playlistid": 0 },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
 
-def set_playlist_add(album_id, ip, port):
+def playlist_add(album_id, ip, port):
     '''Add an album to the audio playlist'''
-    logging.debug('call function set_playlist_add')
+    logging.debug('call function playlist_add')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.Add",
             "params": {
                 "playlistid": 0,
-                "item": {"albumid": album_id } },
+                "item": {
+                    "albumid": album_id } },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
 
-def set_player_open(ip, port):
+def player_open(ip, port):
     '''Open the audio playlist'''
-    logging.debug('call function set_player_open')
+    logging.debug('call function player_open')
     command = {"jsonrpc": "2.0",
             "method": "Player.Open",
             "params": {
-                "item": {"playlistid": 0 } },
+                "item": {
+                    "playlistid": 0 } },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
 
-def set_player_play_pause(ip, port):
+def player_play_pause(ip, port):
     '''Pauses or unpause playback and returns the new state'''
-    logging.debug('call function set_player_play_pause')
+    logging.debug('call function player_play_pause')
     command = {"jsonrpc": "2.0",
             "method": "Player.PlayPause",
             "params": {
@@ -346,13 +355,25 @@ def set_player_play_pause(ip, port):
     ret = call_api(ip, port, command)
     display_result(ret)
 
-def set_player_stop(ip, port):
+def player_stop(ip, port):
     '''Stops playback'''
-    logging.debug('call function set_player_stop')
+    logging.debug('call function player_stop')
     command = {"jsonrpc": "2.0",
             "method": "Player.Stop",
             "params": {
                 "playerid": 0 },
+            "id": 1}
+    ret = call_api(ip, port, command)
+    display_result(ret)
+
+def set_player_set_partymode(ip, port):
+    '''Turn partymode on or off'''
+    logging.debug('call function set_player_set_partymode')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.SetPartymode",
+            "params": {
+                "playerid": 0 ,
+                "partymode": True},
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -533,7 +554,7 @@ class XBMCRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be added to the playlist" % album_id
-        set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+        playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
 
     def do_playlist_clear(self, line):
         '''
@@ -542,7 +563,7 @@ class XBMCRemote(cmd.Cmd):
             Remove all items from the current playlist.
         '''
         logging.debug('call function do_playlist_clear')
-        set_playlist_clear(self.xbmc_ip, self.xbmc_port)
+        playlist_clear(self.xbmc_ip, self.xbmc_port)
 
     # play functions
 
@@ -560,9 +581,9 @@ class XBMCRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be played" % album_id
-        set_playlist_clear(self.xbmc_ip, self.xbmc_port)
-        set_playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
-        set_player_open(self.xbmc_ip, self.xbmc_port)
+        playlist_clear(self.xbmc_ip, self.xbmc_port)
+        playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+        player_open(self.xbmc_ip, self.xbmc_port)
 
     def do_play_party(self, line):
         '''
@@ -570,6 +591,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_party
         '''
         logging.debug('call function do_play_party')
+        set_player_set_partymode(self.xbmc_ip, self.xbmc_port)
         # set_player_open(self.xbmc_ip, self.xbmc_port)
 
     def do_play_pause(self, line):
@@ -579,7 +601,7 @@ class XBMCRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        set_player_play_pause(self.xbmc_ip, self.xbmc_port)
+        player_play_pause(self.xbmc_ip, self.xbmc_port)
 
     def do_play_stop(self, line):
         '''
@@ -588,7 +610,7 @@ class XBMCRemote(cmd.Cmd):
             Stop the music and go home, I repeat, stop the music and go home.
         '''
         logging.debug('call function do_play_stop')
-        set_player_stop(self.xbmc_ip, self.xbmc_port)
+        player_stop(self.xbmc_ip, self.xbmc_port)
 
     def do_play_what(self, line):
         '''
