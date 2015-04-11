@@ -1,30 +1,30 @@
-py-xbmc-remote-controller
+py-kodi-remote-controller
 =========================
 
-XBMC remote controller written in Python
+Kodi remote controller written in Python
 
-Just a fun small project to explore JSON, TCP requests, and play with my favorite HTPC, XBMC.
+Just a fun small project to explore JSON, TCP requests, and play with my favorite HTPC, Kodi.
 
-Well, sometimes I feel bored to seek the TV remote or to launch [Yatse][yatse] on my phone when coding. With this Python script I can now control the audio player of XBMC directly from a terminal. Life is good.
+Well, sometimes I feel bored to seek the TV remote or to launch [Yatse][yatse] on my phone when coding. With this Python script I can now control the audio player of Kodi directly from a terminal. Life is good.
 
 ## Quick start
 
-First, you need to enable the JSON-RPC on XBMC to make it work. Have a look at the [official documentation][tcp] to make it work.
+First, you need to enable the JSON-RPC on Kodi to make it work. Have a look at the [official documentation][tcp] to make it work.
 
-You can now clone this repo and from the root folder, launch the script with the IP of your XBMC server as a parameter:
+You can now clone this repo and from the root folder, launch the script with the IP of your Kodi server as a parameter:
 
 ```
-$ python pyxbmc.py 192.168.1.251
+$ python pykodi.py 192.168.1.251
 ```
 
-On the first launch, the program will sync the XBMC audio library to local files. This may take some times, but will make further requests in the library very very fast.
+On the first launch, the program will sync the Kodi audio library to local files. This may take some times, but will make further requests in the library very very fast.
 
-If everything runs well, you will now see a prompt with the name of your XBMC server.
+If everything runs well, you will now see a prompt with the name of your Kodi server.
 
 From the prompt, use the ``help`` command to have the list of available methods, and help + command to display a usage message. Most of the time, parameters are optional and a random value is used. To play a random album, try:
 
 ```
-(XBMC (OpenELEC)) play_album
+(Kodi (OpenELEC)) play_album
 ```
 
 ## Usage
@@ -61,16 +61,16 @@ The program can be started in a highly verbose mode with the ``-vv`` argument. A
 
 ## Useful links
 
-+ XBMC wiki, ["JSON-RPC API"][api-gen], some general explanations about the API
-+ XBMC wiki, ["JSON-RPC API/v6"][api-v6], the full methods list and description
-+ XBMC wiki, ["JSON-RPC API/Examples"][api-example], json-rpc examples
++ Kodi wiki, ["JSON-RPC API"][api-gen], some general explanations about the API
++ Kodi wiki, ["JSON-RPC API/v6"][api-v6], the full methods list and description
++ Kodi wiki, ["JSON-RPC API/Examples"][api-example], json-rpc examples
 + Python docs, ["18.2. json — JSON encoder and decoder"][python-json], using json in Python
 
 [yatse]: http://yatse.leetzone.org/redmine
-[tcp]: http://wiki.xbmc.org/?title=JSON-RPC_API#TCP
-[api-gen]: http://wiki.xbmc.org/?title=JSON-RPC_API
-[api-v6]: http://wiki.xbmc.org/index.php?title=JSON-RPC_API/v6
-[api-example]: http://wiki.xbmc.org/index.php?title=JSON-RPC_API/Examples
+[tcp]: http://wiki.kodi.org/?title=JSON-RPC_API#TCP
+[api-gen]: http://wiki.kodi.org/?title=JSON-RPC_API
+[api-v6]: http://wiki.kodi.org/index.php?title=JSON-RPC_API/v6
+[api-example]: http://wiki.kodi.org/index.php?title=JSON-RPC_API/Examples
 [python-json]: http://docs.python.org/2/library/json.html
 [cmd-docs]: https://docs.python.org/2/library/cmd.html
 [cmd-tuto]: http://pymotw.com/2/cmd/

@@ -1,11 +1,11 @@
 #!/usr/bin/env python
 #
-# Copyright 2014 Arn-O. See the LICENSE file at the top-level directory of this
+# Copyright 2015 Arn-O. See the LICENSE file at the top-level directory of this
 # distribution and at
-# https://github.com/Arn-O/py-xbmc-remote-controller/blob/master/LICENSE.
+# https://github.com/Arn-O/py-kodi-remote-controller/blob/master/LICENSE.
 
 '''
-XBMC remote controller based on TCP transport, JSON and using the (cmd) interface.
+Kodi remote controller based on TCP transport, JSON and using the (cmd) interface.
 '''
 
 import socket
@@ -23,15 +23,15 @@ DISPLAY_NB_LINES = 10
 
 # utility functions
 
-def get_pyxbmc_params():
+def get_pykodi_params():
     '''Get XBMC sever IP and port'''
     parser = argparse.ArgumentParser()
     parser.add_argument("ip",
-            help='IP of your XBMC server')
+            help='IP of your Kodi server')
     parser.add_argument("-p", "--port",
             type=int,
             default=9090,
-            help='TCP port of the XBMC server')
+            help='TCP port of the Kodi server')
     parser.add_argument("-v", "--verbosity",
             action="count",
             help='Increase output verbosity')
@@ -124,7 +124,7 @@ def get_audio_library_from_server(obj):
     '''Load the library in memory from the XBMC server'''
     logging.debug('get_audio_library_from_server')
     print "Loading the XBMC server library, this may be very long"
-    nb_albums = get_nb_albums(obj.xbmc_ip, obj.xbmc_port)
+    nb_albums = get_nb_albums(obj.kodi_ip, obj.kodi_port)
     logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
     limits = range(0, nb_albums, 10)
@@ -145,7 +145,7 @@ def get_audio_library_from_server(obj):
                                 "start": start, 
                                 "end": end } },
                         "id": 1}
-                ret = call_api(obj.xbmc_ip, obj.xbmc_port, command)
+                ret = call_api(obj.kodi_ip, obj.kodi_port, command)
                 for album in ret['result']['albums']:
                     obj.albums_id.append(album['albumid'])
                     obj.albums_title.append(album['title'])
@@ -463,7 +463,7 @@ class XBMCRemote(cmd.Cmd):
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.xbmc_ip, self.xbmc_port, verbosity) = get_pyxbmc_params()
+        (self.kodi_ip, self.kodi_port, verbosity) = get_pykodi_params()
         if verbosity == 2:
             logging.basicConfig(level=logging.DEBUG)
         elif verbosity == 1:
@@ -479,7 +479,7 @@ class XBMCRemote(cmd.Cmd):
         # fill data
         get_audio_library(self)
         # customize prompt
-        sys_name = system_friendly_name(self.xbmc_ip, self.xbmc_port)
+        sys_name = system_friendly_name(self.kodi_ip, self.kodi_port)
         self.prompt = "(" + sys_name + ") "
         # welcome message
         print "For a quick start, try play_album"
@@ -542,8 +542,8 @@ class XBMCRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
-        properties = get_properties(self.xbmc_ip, self.xbmc_port)
-        tracks = playlist_get_items(self.xbmc_ip, self.xbmc_port)
+        properties = get_properties(self.kodi_ip, self.kodi_port)
+        tracks = playlist_get_items(self.kodi_ip, self.kodi_port)
         disp_playlist(properties, tracks)
 
     def do_playlist_add(self, line):
@@ -560,7 +560,7 @@ class XBMCRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be added to the playlist" % album_id
-        playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
+        playlist_add(album_id, self.kodi_ip, self.kodi_port)
 
     def do_playlist_clear(self, line):
         '''
@@ -569,7 +569,7 @@ class XBMCRemote(cmd.Cmd):
             Remove all items from the current playlist.
         '''
         logging.debug('call function do_playlist_clear')
-        playlist_clear(self.xbmc_ip, self.xbmc_port)
+        playlist_clear(self.kodi_ip, self.kodi_port)
 
     # play functions
 
@@ -587,9 +587,9 @@ class XBMCRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be played" % album_id
-        playlist_clear(self.xbmc_ip, self.xbmc_port)
-        playlist_add(album_id, self.xbmc_ip, self.xbmc_port)
-        player_open(self.xbmc_ip, self.xbmc_port)
+        playlist_clear(self.kodi_ip, self.kodi_port)
+        playlist_add(album_id, self.kodi_ip, self.kodi_port)
+        player_open(self.kodi_ip, self.kodi_port)
 
     def do_play_party(self, line):
         '''
@@ -597,7 +597,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_party
         '''
         logging.debug('call function do_play_party')
-        player_open_party(self.xbmc_ip, self.xbmc_port)
+        player_open_party(self.kodi_ip, self.kodi_port)
 
     def do_play_pause(self, line):
         '''
@@ -606,7 +606,7 @@ class XBMCRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        player_play_pause(self.xbmc_ip, self.xbmc_port)
+        player_play_pause(self.kodi_ip, self.kodi_port)
 
     def do_play_stop(self, line):
         '''
@@ -615,7 +615,7 @@ class XBMCRemote(cmd.Cmd):
             Stop the music and go home, I repeat, stop the music and go home.
         '''
         logging.debug('call function do_play_stop')
-        player_stop(self.xbmc_ip, self.xbmc_port)
+        player_stop(self.kodi_ip, self.kodi_port)
 
     def do_play_what(self, line):
         '''
@@ -623,9 +623,9 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_what
         '''
         logging.debug('call function do_play_what')
-        item = get_item(self.xbmc_ip, self.xbmc_port)
-        properties = get_properties(self.xbmc_ip, self.xbmc_port)
-        items = playlist_get_items(self.xbmc_ip, self.xbmc_port)
+        item = get_item(self.kodi_ip, self.kodi_port)
+        properties = get_properties(self.kodi_ip, self.kodi_port)
+        items = playlist_get_items(self.kodi_ip, self.kodi_port)
         disp_now_playing(item, properties)
         disp_next_playing(properties, items)
 
