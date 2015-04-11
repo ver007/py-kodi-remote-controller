@@ -257,7 +257,8 @@ def get_item(ip, port):
                     "title",
                     "artist",
                     "year",
-                    "rating" ] },
+                    "rating",
+                    "musicbrainztrackid" ] },
             "id": 1}
     ret = call_api(ip, port, command)
     display_result(ret)
@@ -435,6 +436,7 @@ def disp_now_playing(item, properties):
         print 'Now Playing:'
         print
         print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
+        print "   %s" % (item['musicbrainztrackid'])
         print "   %s - [%s]" % (item['title'], disp_rating)
         print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
                 properties['time']['hours'],
