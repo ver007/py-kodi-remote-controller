@@ -28,15 +28,18 @@ def get_pykodi_params():
     parser = argparse.ArgumentParser()
     parser.add_argument("ip",
             help='IP of your Kodi server')
+    parser.add_argument("--tcp",
+            action="store_true",
+            help='Use TCP transport')
     parser.add_argument("-p", "--port",
             type=int,
             default=9090,
-            help='TCP port of the Kodi server')
+            help='TCP or HTTP port of the Kodi server')
     parser.add_argument("-v", "--verbosity",
             action="count",
             help='Increase output verbosity')
     args = parser.parse_args()
-    return args.ip, args.port, args.verbosity
+    return args.tcp, args.ip, args.port, args.verbosity
 
 # API call management
 
@@ -463,7 +466,12 @@ class XBMCRemote(cmd.Cmd):
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.kodi_ip, self.kodi_port, verbosity) = get_pykodi_params()
+        (
+                self.tcp,
+                self.kodi_ip, 
+                self.kodi_port, 
+                verbosity
+                ) = get_pykodi_params()
         if verbosity == 2:
             logging.basicConfig(level=logging.DEBUG)
         elif verbosity == 1:
