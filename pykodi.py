@@ -24,7 +24,7 @@ DISPLAY_NB_LINES = 10
 # utility functions
 
 def get_pykodi_params():
-    '''Get XBMC sever IP and port'''
+    '''Get Kodi sever IP and port'''
     parser = argparse.ArgumentParser()
     parser.add_argument("ip",
             help='IP of your Kodi server')
@@ -39,11 +39,27 @@ def get_pykodi_params():
             action="count",
             help='Increase output verbosity')
     args = parser.parse_args()
-    return args.tcp, args.ip, args.port, args.verbosity
+    server_params = {}
+    server_params['tcp'] = args.tcp
+    server_params['ip'] = args.ip
+    server_params['port'] = args.port
+    return server_params, args.verbosity
 
 # API call management
 
-def call_api(ip, port, command):
+
+def call_api(server_params, command):
+    if server_params['tcp']:
+        ret = call_api_tcp(
+                server_params['ip'], 
+                server_params['port'],
+                command)
+    else:
+        print "User HTTP"
+        ret = ""
+    return ret
+
+def call_api_tcp(ip, port, command):
     '''Send the command using TCP'''
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((ip, port))
@@ -124,9 +140,9 @@ def get_audio_library_from_files(obj):
     obj.nb_albums = len(obj.albums_id)
 
 def get_audio_library_from_server(obj):
-    '''Load the library in memory from the XBMC server'''
+    '''Load the library in memory from the Kodi server'''
     logging.debug('get_audio_library_from_server')
-    print "Loading the XBMC server library, this may be very long"
+    print "Loading the Kodi server library, this may be very long"
     nb_albums = get_nb_albums(obj.kodi_ip, obj.kodi_port)
     logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
@@ -292,14 +308,14 @@ def get_properties(ip, port):
         pass
     return result
 
-def system_friendly_name(ip, port):
+def system_friendly_name(server_params):
     '''Get the system name and hostname'''
     command = {"jsonrpc": "2.0",
             "method": "XBMC.GetInfoLabels",
             "params": {
                 "labels": ["System.FriendlyName"] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     return ret['result']['System.FriendlyName']
 
@@ -462,23 +478,18 @@ def disp_next_playing(properties, items):
 
 # process return messages
 
-class XBMCRemote(cmd.Cmd):
+class KodiRemote(cmd.Cmd):
         
     '''Subclass of the cmd class'''
     
     def preloop(self):
         '''Override and used for class variable'''
-        (
-                self.tcp,
-                self.kodi_ip, 
-                self.kodi_port, 
-                verbosity
-                ) = get_pykodi_params()
+        (self.kodi_params, verbosity) = get_pykodi_params()
         if verbosity == 2:
             logging.basicConfig(level=logging.DEBUG)
         elif verbosity == 1:
             logging.basicConfig(level=logging.INFO)
-        logging.info('XBMC controller started in verbosity mode ...')
+        logging.info('Kodi controller started in verbosity mode ...')
         logging.debug('... and even in high verbosity mode!')
         # initialize library description
         self.nb_albums = 0
@@ -489,7 +500,7 @@ class XBMCRemote(cmd.Cmd):
         # fill data
         get_audio_library(self)
         # customize prompt
-        sys_name = system_friendly_name(self.kodi_ip, self.kodi_port)
+        sys_name = system_friendly_name(self.kodi_params)
         self.prompt = "(" + sys_name + ") "
         # welcome message
         print "For a quick start, try play_album"
@@ -648,7 +659,7 @@ class XBMCRemote(cmd.Cmd):
 def main():
     '''Where everything starts'''
 
-    remote_controller = XBMCRemote()
+    remote_controller = KodiRemote()
     remote_controller.cmdloop()
 
 if __name__ == '__main__':
