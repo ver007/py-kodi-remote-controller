@@ -9,6 +9,7 @@ Kodi remote controller based on TCP transport, JSON and using the (cmd) interfac
 '''
 
 import socket
+import requests
 import json
 from datetime import timedelta
 import pickle
@@ -24,23 +25,63 @@ DISPLAY_NB_LINES = 10
 # utility functions
 
 def get_pykodi_params():
-    '''Get XBMC sever IP and port'''
+    '''Get Kodi sever IP and port'''
     parser = argparse.ArgumentParser()
     parser.add_argument("ip",
             help='IP of your Kodi server')
+    parser.add_argument("--tcp",
+            action="store_true",
+            help='Use TCP transport')
     parser.add_argument("-p", "--port",
             type=int,
             default=9090,
-            help='TCP port of the Kodi server')
+            help='TCP or HTTP port of the Kodi server')
+    parser.add_argument("-u", "--user",
+            help='User for HTTP transport')
+    parser.add_argument("-pw", "--password",
+            help='Password for HTTP transport')
     parser.add_argument("-v", "--verbosity",
             action="count",
             help='Increase output verbosity')
     args = parser.parse_args()
-    return args.ip, args.port, args.verbosity
+    server_params = {}
+    server_params['tcp'] = args.tcp
+    server_params['ip'] = args.ip
+    server_params['port'] = args.port
+    server_params['user'] = args.user
+    server_params['password'] = args.password
+    return server_params, args.verbosity
 
 # API call management
 
-def call_api(ip, port, command):
+
+def call_api(server_params, command):
+    if server_params['tcp']:
+        ret = call_api_tcp(
+                server_params['ip'], 
+                server_params['port'],
+                command)
+    else:
+        ret = call_api_http(server_params, command)
+    return ret
+
+def call_api_http(server_params, command):
+    logging.debug('call call_api_http')
+    logging.debug('command: %s', command)
+    kodi_url = 'http://' + server_params['ip'] +  ':' + str(server_params['port']) + '/jsonrpc'
+    headers = {'Content-Type': 'application/json'}
+    r = requests.post(
+            kodi_url,
+            data=json.dumps(command),
+            headers=headers,
+            auth=(server_params['user'], server_params['password']))
+    ret = r.json()
+    logging.debug('url: %s', r.url)
+    logging.debug('status code: %s', r.status_code)
+    logging.debug('text: %s', r.text)
+    return ret
+
+def call_api_tcp(ip, port, command):
     '''Send the command using TCP'''
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((ip, port))
@@ -121,9 +162,9 @@ def get_audio_library_from_files(obj):
     obj.nb_albums = len(obj.albums_id)
 
 def get_audio_library_from_server(obj):
-    '''Load the library in memory from the XBMC server'''
+    '''Load the library in memory from the Kodi server'''
     logging.debug('get_audio_library_from_server')
-    print "Loading the XBMC server library, this may be very long"
+    print "Loading the Kodi server library, this may be very long"
     nb_albums = get_nb_albums(obj.kodi_ip, obj.kodi_port)
     logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
@@ -220,7 +261,7 @@ def get_albums_search(search_string, obj):
 
 # getters
 
-def playlist_get_items(ip, port):
+def playlist_get_items(server_params):
     '''Get all items from the audio playlist'''
     logging.debug('call playlist_get_items')
     command = {"jsonrpc": "2.0",
@@ -233,7 +274,7 @@ def playlist_get_items(ip, port):
                     "duration", 
                     "track"] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     tracks = None
     try:
@@ -242,7 +283,7 @@ def playlist_get_items(ip, port):
         pass
     return tracks
 
-def get_item(ip, port):
+def get_item(server_params):
     '''Get the current played item'''
     logging.debug('call function get_item')
     command = {"jsonrpc": "2.0",
@@ -254,9 +295,10 @@ def get_item(ip, port):
                     "title",
                     "artist",
                     "year",
-                    "rating" ] },
+                    "rating",
+                    "musicbrainztrackid" ] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     item = None
     try:
@@ -265,7 +307,7 @@ def get_item(ip, port):
         pass
     return item
 
-def get_properties(ip, port):
+def get_properties(server_params):
     '''Get properties of the played item'''
     logging.debug('call function get_properties')
     command = {"jsonrpc": "2.0",
@@ -278,7 +320,7 @@ def get_properties(ip, port):
                     "percentage",
                     "position" ] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     result = None
     try:
@@ -288,14 +330,14 @@ def get_properties(ip, port):
         pass
     return result
 
-def system_friendly_name(ip, port):
+def system_friendly_name(server_params):
     '''Get the system name and hostname'''
     command = {"jsonrpc": "2.0",
             "method": "XBMC.GetInfoLabels",
             "params": {
                 "labels": ["System.FriendlyName"] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     return ret['result']['System.FriendlyName']
 
@@ -314,7 +356,7 @@ def get_nb_albums(ip, port):
 
 # setters
 
-def playlist_clear(ip, port):
+def playlist_clear(server_params):
     '''Clear the audio playlist'''
     logging.debug('call function playlist_clear')
     command = {"jsonrpc": "2.0",
@@ -322,10 +364,10 @@ def playlist_clear(ip, port):
             "params": {
                 "playlistid": 0 },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def playlist_add(album_id, ip, port):
+def playlist_add(album_id, server_params):
     '''Add an album to the audio playlist'''
     logging.debug('call function playlist_add')
     command = {"jsonrpc": "2.0",
@@ -335,10 +377,10 @@ def playlist_add(album_id, ip, port):
                 "item": {
                     "albumid": album_id } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_open(ip, port):
+def player_open(server_params):
     '''Open the audio playlist'''
     logging.debug('call function player_open')
     command = {"jsonrpc": "2.0",
@@ -347,10 +389,10 @@ def player_open(ip, port):
                 "item": {
                     "playlistid": 0 } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_open_party(ip, port):
+def player_open_party(server_params):
     '''Open the audio player in partymode'''
     logging.debug('call function player_open_party')
     command = {"jsonrpc": "2.0",
@@ -359,10 +401,10 @@ def player_open_party(ip, port):
                 "item": {
                     "partymode": "music" } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_play_pause(ip, port):
+def player_play_pause(server_params):
     '''Pauses or unpause playback and returns the new state'''
     logging.debug('call function player_play_pause')
     command = {"jsonrpc": "2.0",
@@ -370,10 +412,10 @@ def player_play_pause(ip, port):
             "params": {
                 "playerid": 0 },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_stop(ip, port):
+def player_stop(server_params):
     '''Stops playback'''
     logging.debug('call function player_stop')
     command = {"jsonrpc": "2.0",
@@ -381,7 +423,7 @@ def player_stop(ip, port):
             "params": {
                 "playerid": 0 },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
 # display function
@@ -432,6 +474,7 @@ def disp_now_playing(item, properties):
         print 'Now Playing:'
         print
         print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
+        print "   %s" % (item['musicbrainztrackid'])
         print "   %s - [%s]" % (item['title'], disp_rating)
         print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
                 properties['time']['hours'],
@@ -457,18 +500,18 @@ def disp_next_playing(properties, items):
 
 # process return messages
 
-class XBMCRemote(cmd.Cmd):
+class KodiRemote(cmd.Cmd):
         
     '''Subclass of the cmd class'''
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.kodi_ip, self.kodi_port, verbosity) = get_pykodi_params()
+        (self.kodi_params, verbosity) = get_pykodi_params()
         if verbosity == 2:
             logging.basicConfig(level=logging.DEBUG)
         elif verbosity == 1:
             logging.basicConfig(level=logging.INFO)
-        logging.info('XBMC controller started in verbosity mode ...')
+        logging.info('Kodi controller started in verbosity mode ...')
         logging.debug('... and even in high verbosity mode!')
         # initialize library description
         self.nb_albums = 0
@@ -479,7 +522,7 @@ class XBMCRemote(cmd.Cmd):
         # fill data
         get_audio_library(self)
         # customize prompt
-        sys_name = system_friendly_name(self.kodi_ip, self.kodi_port)
+        sys_name = system_friendly_name(self.kodi_params)
         self.prompt = "(" + sys_name + ") "
         # welcome message
         print "For a quick start, try play_album"
@@ -542,8 +585,8 @@ class XBMCRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
-        properties = get_properties(self.kodi_ip, self.kodi_port)
-        tracks = playlist_get_items(self.kodi_ip, self.kodi_port)
+        properties = get_properties(self.kodi_params)
+        tracks = playlist_get_items(self.kodi_params)
         disp_playlist(properties, tracks)
 
     def do_playlist_add(self, line):
@@ -560,7 +603,7 @@ class XBMCRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be added to the playlist" % album_id
-        playlist_add(album_id, self.kodi_ip, self.kodi_port)
+        playlist_add(album_id, self.kodi_params)
 
     def do_playlist_clear(self, line):
         '''
@@ -569,7 +612,7 @@ class XBMCRemote(cmd.Cmd):
             Remove all items from the current playlist.
         '''
         logging.debug('call function do_playlist_clear')
-        playlist_clear(self.kodi_ip, self.kodi_port)
+        playlist_clear(self.kodi_params)
 
     # play functions
 
@@ -587,9 +630,9 @@ class XBMCRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be played" % album_id
-        playlist_clear(self.kodi_ip, self.kodi_port)
-        playlist_add(album_id, self.kodi_ip, self.kodi_port)
-        player_open(self.kodi_ip, self.kodi_port)
+        playlist_clear(self.kodi_params)
+        playlist_add(album_id, self.kodi_params)
+        player_open(self.kodi_params)
 
     def do_play_party(self, line):
         '''
@@ -597,7 +640,7 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_party
         '''
         logging.debug('call function do_play_party')
-        player_open_party(self.kodi_ip, self.kodi_port)
+        player_open_party(self.kodi_params)
 
     def do_play_pause(self, line):
         '''
@@ -606,7 +649,7 @@ class XBMCRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        player_play_pause(self.kodi_ip, self.kodi_port)
+        player_play_pause(self.kodi_params)
 
     def do_play_stop(self, line):
         '''
@@ -615,7 +658,7 @@ class XBMCRemote(cmd.Cmd):
             Stop the music and go home, I repeat, stop the music and go home.
         '''
         logging.debug('call function do_play_stop')
-        player_stop(self.kodi_ip, self.kodi_port)
+        player_stop(self.kodi_params)
 
     def do_play_what(self, line):
         '''
@@ -623,9 +666,9 @@ class XBMCRemote(cmd.Cmd):
         Usage: play_what
         '''
         logging.debug('call function do_play_what')
-        item = get_item(self.kodi_ip, self.kodi_port)
-        properties = get_properties(self.kodi_ip, self.kodi_port)
-        items = playlist_get_items(self.kodi_ip, self.kodi_port)
+        item = get_item(self.kodi_params)
+        properties = get_properties(self.kodi_params)
+        items = playlist_get_items(self.kodi_params)
         disp_now_playing(item, properties)
         disp_next_playing(properties, items)
 
@@ -638,7 +681,7 @@ class XBMCRemote(cmd.Cmd):
 def main():
     '''Where everything starts'''
 
-    remote_controller = XBMCRemote()
+    remote_controller = KodiRemote()
     remote_controller.cmdloop()
 
 if __name__ == '__main__':
