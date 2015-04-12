@@ -35,6 +35,10 @@ def get_pykodi_params():
             type=int,
             default=9090,
             help='TCP or HTTP port of the Kodi server')
+    parser.add_argument("-u", "--user",
+            help='User for HTTP transport')
+    parser.add_argument("-pw", "--password",
+            help='Password for HTTP transport')
     parser.add_argument("-v", "--verbosity",
             action="count",
             help='Increase output verbosity')
@@ -43,6 +47,8 @@ def get_pykodi_params():
     server_params['tcp'] = args.tcp
     server_params['ip'] = args.ip
     server_params['port'] = args.port
+    server_params['user'] = args.user
+    server_params['password'] = args.password
     return server_params, args.verbosity
 
 # API call management
@@ -55,8 +61,12 @@ def call_api(server_params, command):
                 server_params['port'],
                 command)
     else:
-        print "User HTTP"
-        ret = ""
+        ret = call_api_http(server_params, command)
+    return ret
+
+def call_api_http(server_params, command):
+    ret = ""
+    print server_params['user']
     return ret
 
 def call_api_tcp(ip, port, command):
