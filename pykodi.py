@@ -603,7 +603,7 @@ class KodiRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be added to the playlist" % album_id
-        playlist_add(album_id, self.kodi_ip, self.kodi_port)
+        playlist_add(album_id, self.kodi_params)
 
     def do_playlist_clear(self, line):
         '''
