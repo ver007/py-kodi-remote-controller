@@ -261,7 +261,7 @@ def get_albums_search(search_string, obj):
 
 # getters
 
-def playlist_get_items(ip, port):
+def playlist_get_items(server_params):
     '''Get all items from the audio playlist'''
     logging.debug('call playlist_get_items')
     command = {"jsonrpc": "2.0",
@@ -274,7 +274,7 @@ def playlist_get_items(ip, port):
                     "duration", 
                     "track"] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     tracks = None
     try:
@@ -283,7 +283,7 @@ def playlist_get_items(ip, port):
         pass
     return tracks
 
-def get_item(ip, port):
+def get_item(server_params):
     '''Get the current played item'''
     logging.debug('call function get_item')
     command = {"jsonrpc": "2.0",
@@ -298,7 +298,7 @@ def get_item(ip, port):
                     "rating",
                     "musicbrainztrackid" ] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     item = None
     try:
@@ -307,7 +307,7 @@ def get_item(ip, port):
         pass
     return item
 
-def get_properties(ip, port):
+def get_properties(server_params):
     '''Get properties of the played item'''
     logging.debug('call function get_properties')
     command = {"jsonrpc": "2.0",
@@ -320,7 +320,7 @@ def get_properties(ip, port):
                     "percentage",
                     "position" ] },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     result = None
     try:
@@ -404,7 +404,7 @@ def player_open_party(server_params):
     ret = call_api(server_params, command)
     display_result(ret)
 
-def player_play_pause(ip, port):
+def player_play_pause(server_params):
     '''Pauses or unpause playback and returns the new state'''
     logging.debug('call function player_play_pause')
     command = {"jsonrpc": "2.0",
@@ -412,10 +412,10 @@ def player_play_pause(ip, port):
             "params": {
                 "playerid": 0 },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_stop(ip, port):
+def player_stop(server_params):
     '''Stops playback'''
     logging.debug('call function player_stop')
     command = {"jsonrpc": "2.0",
@@ -423,7 +423,7 @@ def player_stop(ip, port):
             "params": {
                 "playerid": 0 },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
 # display function
@@ -585,8 +585,8 @@ class KodiRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
-        properties = get_properties(self.kodi_ip, self.kodi_port)
-        tracks = playlist_get_items(self.kodi_ip, self.kodi_port)
+        properties = get_properties(self.kodi_params)
+        tracks = playlist_get_items(self.kodi_params)
         disp_playlist(properties, tracks)
 
     def do_playlist_add(self, line):
@@ -649,7 +649,7 @@ class KodiRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        player_play_pause(self.kodi_ip, self.kodi_port)
+        player_play_pause(self.kodi_params)
 
     def do_play_stop(self, line):
         '''
@@ -658,7 +658,7 @@ class KodiRemote(cmd.Cmd):
             Stop the music and go home, I repeat, stop the music and go home.
         '''
         logging.debug('call function do_play_stop')
-        player_stop(self.kodi_ip, self.kodi_port)
+        player_stop(self.kodi_params)
 
     def do_play_what(self, line):
         '''
@@ -666,9 +666,9 @@ class KodiRemote(cmd.Cmd):
         Usage: play_what
         '''
         logging.debug('call function do_play_what')
-        item = get_item(self.kodi_ip, self.kodi_port)
-        properties = get_properties(self.kodi_ip, self.kodi_port)
-        items = playlist_get_items(self.kodi_ip, self.kodi_port)
+        item = get_item(self.kodi_params)
+        properties = get_properties(self.kodi_params)
+        items = playlist_get_items(self.kodi_params)
         disp_now_playing(item, properties)
         disp_next_playing(properties, items)
 
