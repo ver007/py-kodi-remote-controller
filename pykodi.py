@@ -356,7 +356,7 @@ def get_nb_albums(ip, port):
 
 # setters
 
-def playlist_clear(ip, port):
+def playlist_clear(server_params):
     '''Clear the audio playlist'''
     logging.debug('call function playlist_clear')
     command = {"jsonrpc": "2.0",
@@ -364,10 +364,10 @@ def playlist_clear(ip, port):
             "params": {
                 "playlistid": 0 },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def playlist_add(album_id, ip, port):
+def playlist_add(album_id, server_params):
     '''Add an album to the audio playlist'''
     logging.debug('call function playlist_add')
     command = {"jsonrpc": "2.0",
@@ -377,10 +377,10 @@ def playlist_add(album_id, ip, port):
                 "item": {
                     "albumid": album_id } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_open(ip, port):
+def player_open(server_params):
     '''Open the audio playlist'''
     logging.debug('call function player_open')
     command = {"jsonrpc": "2.0",
@@ -389,10 +389,10 @@ def player_open(ip, port):
                 "item": {
                     "playlistid": 0 } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
-def player_open_party(ip, port):
+def player_open_party(server_params):
     '''Open the audio player in partymode'''
     logging.debug('call function player_open_party')
     command = {"jsonrpc": "2.0",
@@ -401,7 +401,7 @@ def player_open_party(ip, port):
                 "item": {
                     "partymode": "music" } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
 
 def player_play_pause(ip, port):
@@ -612,7 +612,7 @@ class KodiRemote(cmd.Cmd):
             Remove all items from the current playlist.
         '''
         logging.debug('call function do_playlist_clear')
-        playlist_clear(self.kodi_ip, self.kodi_port)
+        playlist_clear(self.kodi_params)
 
     # play functions
 
@@ -630,9 +630,9 @@ class KodiRemote(cmd.Cmd):
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
             print "Album %i will be played" % album_id
-        playlist_clear(self.kodi_ip, self.kodi_port)
-        playlist_add(album_id, self.kodi_ip, self.kodi_port)
-        player_open(self.kodi_ip, self.kodi_port)
+        playlist_clear(self.kodi_params)
+        playlist_add(album_id, self.kodi_params)
+        player_open(self.kodi_params)
 
     def do_play_party(self, line):
         '''
@@ -640,7 +640,7 @@ class KodiRemote(cmd.Cmd):
         Usage: play_party
         '''
         logging.debug('call function do_play_party')
-        player_open_party(self.kodi_ip, self.kodi_port)
+        player_open_party(self.kodi_params)
 
     def do_play_pause(self, line):
         '''
