@@ -9,6 +9,7 @@ Kodi remote controller based on TCP transport, JSON and using the (cmd) interfac
 '''
 
 import socket
+import requests
 import json
 from datetime import timedelta
 import pickle
@@ -65,8 +66,19 @@ def call_api(server_params, command):
     return ret
 
 def call_api_http(server_params, command):
-    ret = ""
-    print server_params['user']
+    logging.debug('call call_api_http')
+    logging.debug('command: %s', command)
+    kodi_url = 'http://' + server_params['ip'] +  ':' + str(server_params['port']) + '/jsonrpc'
+    headers = {'Content-Type': 'application/json'}
+    r = requests.post(
+            kodi_url,
+            data=json.dumps(command),
+            headers=headers,
+            auth=(server_params['user'], server_params['password']))
+    ret = r.json()
+    logging.debug('url: %s', r.url)
+    logging.debug('status code: %s', r.status_code)
+    logging.debug('text: %s', r.text)
     return ret
 
 def call_api_tcp(ip, port, command):
