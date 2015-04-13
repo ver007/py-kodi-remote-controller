@@ -83,7 +83,7 @@ The program can be started in a highly verbose mode with the ``-vv`` argument. A
 [tcp]: http://kodi.wiki/?title=JSON-RPC_API#TCP
 [api-gen]: http://kodi.wiki/?title=JSON-RPC_API
 [api-v6]: http://kodi.wiki/index.php?title=JSON-RPC_API/v6
-[api-example]: http://kodi.wiki.org/index.php?title=JSON-RPC_API/Examples
+[api-example]: http://kodi.wiki/view/JSON-RPC_API/Examples
 [python-json]: http://docs.python.org/2/library/json.html
 [cmd-docs]: https://docs.python.org/2/library/cmd.html
 [cmd-tuto]: http://pymotw.com/2/cmd/
