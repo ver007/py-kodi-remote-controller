@@ -9,15 +9,27 @@ Well, sometimes I feel bored to seek the TV remote or to launch [Yatse][yatse] o
 
 ## Quick start
 
-First, you need to enable the JSON-RPC on Kodi to make it work. Have a look at the [official documentation][tcp] to make it work.
+First step, clone this repository localy. Kodi needs to be configured to accept remote controls. This is done differently based on the transport that you want to use.
 
-You can now clone this repo and from the root folder, launch the script with the IP of your Kodi server as a parameter:
+### HTTP
+
+This type of transport is the default value. Have a look at the official [documentation][http] to activate the HTTP server on your Kodi server. Here is how to launch the script:
 
 ```
-$ python pykodi.py 192.168.1.251
+$ python pykodi.py 192.168.1.251 -p 8080 -u web_user -pw web_password
 ```
 
-On the first launch, the program will sync the Kodi audio library to local files. This may take some times, but will make further requests in the library very very fast.
+### TCP
+
+Here is the link to the [official documentation][tcp]. Launch the script with the IP of your Kodi server as a parameter and the ``--tcp`` switch:
+
+```
+$ python pykodi.py 192.168.1.251 --tcp
+```
+
+### First launch
+
+On the first launch, the program will **sync the Kodi audio library** to local files. This may take some times, but will make further requests in the library very very fast.
 
 If everything runs well, you will now see a prompt with the name of your Kodi server.
 
@@ -67,6 +79,7 @@ The program can be started in a highly verbose mode with the ``-vv`` argument. A
 + Python docs, ["18.2. json — JSON encoder and decoder"][python-json], using json in Python
 
 [yatse]: http://yatse.leetzone.org/redmine
+[http]: http://kodi.wiki/?title=JSON-RPC_API#HTTP
 [tcp]: http://kodi.wiki/?title=JSON-RPC_API#TCP
 [api-gen]: http://kodi.wiki/?title=JSON-RPC_API
 [api-v6]: http://kodi.wiki/index.php?title=JSON-RPC_API/v6
