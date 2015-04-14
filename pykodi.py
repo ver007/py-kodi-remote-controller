@@ -147,6 +147,10 @@ def get_audio_library(obj):
 def get_audio_library_from_files(obj):
     '''Load the library in memory from local files'''
     logging.debug('call function get_audio_library_from_files')
+    f = open('songs.pickle', 'rb')
+    obj.songs = pickle.load(f)
+    f.close()
+    obj.nb_songs = len(obj.songs)
     f = open('albums_id.pickle', 'rb')
     obj.albums_id = pickle.load(f)
     f.close()
@@ -165,14 +169,54 @@ def get_audio_library_from_server(obj):
     '''Load the library in memory from the Kodi server'''
     logging.debug('get_audio_library_from_server')
     print "Loading the Kodi server library, this may be very long"
-    nb_albums = get_nb_albums(obj.kodi_ip, obj.kodi_port)
+    # Loading songs
+    nb_songs = get_nb_songs(obj.kodi_params)
+    logging.debug('number of songs: %i', nb_songs)
+    obj.nb_songs = nb_songs
+    limits = range(0, nb_songs, 20)
+    if not limits[-1] == nb_songs:
+        limits.append(nb_songs)
+    for start, end in zip(limits[:-1], limits[1:]):
+        logging.info('Processing song %i to %i ...', start, end)
+        while True:
+            try:
+                command = {"jsonrpc": "2.0",
+                        "method": "AudioLibrary.GetSongs",
+                         "params": {
+                            "properties": [
+                                "title", 
+                                "artist", 
+                                "year",
+                                "rating",
+                                "playcount",
+                                "musicbrainztrackid"
+                                ],
+                            "limits": { 
+                                "start": start, 
+                                "end": end } },
+                        "id": 1}
+                ret = call_api(obj.kodi_params, command)
+                for song in ret['result']['songs']:
+                    obj.songs[song['songid']] = {}
+                    obj.songs[song['songid']]['title'] = song['title']
+                    obj.songs[song['songid']]['artist'] = song['artist'][0]
+                    obj.songs[song['songid']]['year'] = song['year']
+                    obj.songs[song['songid']]['rating'] = song['rating']
+                    obj.songs[song['songid']]['playcount'] = song['playcount']
+                    obj.songs[song['songid']][
+                            'musicbrainztrackid'] = song['musicbrainztrackid']
+                break
+            except KeyError:
+                logging.info('error when loading library, retry')
+    # Loading albums
+    nb_albums = get_nb_albums(obj.kodi_params)
     logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
     limits = range(0, nb_albums, 10)
     if not limits[-1] == nb_albums:
         limits.append(nb_albums)
     for start, end in zip(limits[:-1], limits[1:]):
-        logging.debug('Processing album %i to %i ...', start, end)
+        logging.info('Processing album %i to %i ...', start, end)
         while True:
             try:
                 command = {"jsonrpc": "2.0",
@@ -186,8 +230,9 @@ def get_audio_library_from_server(obj):
                                 "start": start, 
                                 "end": end } },
                         "id": 1}
-                ret = call_api(obj.kodi_ip, obj.kodi_port, command)
+                ret = call_api(obj.kodi_params, command)
                 for album in ret['result']['albums']:
+                    #TODO: change to a dict of dicts
                     obj.albums_id.append(album['albumid'])
                     obj.albums_title.append(album['title'])
                     obj.albums_artist.append(album['artist'])
@@ -195,6 +240,9 @@ def get_audio_library_from_server(obj):
                 break
             except KeyError:
                 logging.info('error when loading library, retry')
+    f = open('songs.pickle', 'wb')
+    pickle.dump(obj.songs, f)
+    f.close()
     f = open('albums_id.pickle', 'wb')
     pickle.dump(obj.albums_id, f)
     f.close()
@@ -341,7 +389,20 @@ def system_friendly_name(server_params):
     display_result(ret)
     return ret['result']['System.FriendlyName']
 
-def get_nb_albums(ip, port):
+def get_nb_songs(server_params):
+    '''Give the total number of songs in the library'''
+    command = {"jsonrpc": "2.0",
+            "method": "AudioLibrary.GetSongs",
+            "params": {
+                "limits": {
+                    "start": 0, 
+                    "end": 1 } },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+    return ret['result']['limits']['total']
+
+def get_nb_albums(server_params):
     '''Give the total number of albums in the library'''
     command = {"jsonrpc": "2.0",
             "method": "AudioLibrary.GetAlbums",
@@ -350,7 +411,7 @@ def get_nb_albums(ip, port):
                     "start": 0, 
                     "end": 1 } },
             "id": 1}
-    ret = call_api(ip, port, command)
+    ret = call_api(server_params, command)
     display_result(ret)
     return ret['result']['limits']['total']
 
@@ -443,6 +504,21 @@ def disp_albums_index(albums_pos, obj):
     print "Total number of albums: %i" % obj.nb_albums
     print
 
+def disp_songs_index(songs_pos, obj):
+    '''Display songs list from internal index'''
+    logging.debug('call disp_songs_index')
+    print
+    for i, song_pos in enumerate(songs_pos):
+        print ("%02i. %s by %s (%s) [%i]") % (
+                i + 1,
+                obj.songs[song_pos]['title'],
+                obj.songs[song_pos]['artist'],
+                obj.songs[song_pos]['year'],
+                song_pos )
+    print
+    print "Total number of songs: %i" % obj.nb_songs
+    print
+
 def disp_playlist(properties, tracks):
     '''Display playlist'''
     if properties:
@@ -514,6 +590,8 @@ class KodiRemote(cmd.Cmd):
         logging.info('Kodi controller started in verbosity mode ...')
         logging.debug('... and even in high verbosity mode!')
         # initialize library description
+        self.nb_songs = 0
+        self.songs = {}
         self.nb_albums = 0
         self.albums_id = []
         self.albums_title = []
@@ -576,6 +654,24 @@ class KodiRemote(cmd.Cmd):
         search_string = line.lower()
         albums_pos = get_albums_search(search_string, self)
         disp_albums_index(albums_pos, self)
+
+    # songs functions
+    
+    def do_songs_page(self, line):
+        '''
+        Display a given page of the songs library
+        Usage: songss_page [page]
+            The page is optional, a random page is displayed without it.
+        '''
+        logging.debug('call function do_songs_page')
+        page_nb = parse_single_int(line)
+        if not page_nb:
+            logging.info('no page number provided')
+            page_nb = random.randrange(int(self.nb_songs / 10) + 1)
+        songs_pos = range(
+                (page_nb - 1)  * DISPLAY_NB_LINES + 1, 
+                page_nb * DISPLAY_NB_LINES + 1)
+        disp_songs_index(songs_pos, self)
 
     # playlist functions
 
