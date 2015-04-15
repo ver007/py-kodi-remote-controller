@@ -43,6 +43,8 @@ def get_pykodi_params():
     parser.add_argument("-v", "--verbosity",
             action="count",
             help='Increase output verbosity')
+    parser.add_argument("-enk", "--echonest-key",
+            help='Echonest API key')
     args = parser.parse_args()
     server_params = {}
     server_params['tcp'] = args.tcp
@@ -50,7 +52,7 @@ def get_pykodi_params():
     server_params['port'] = args.port
     server_params['user'] = args.user
     server_params['password'] = args.password
-    return server_params, args.verbosity
+    return server_params, args.echonest_key, args.verbosity
 
 # API call management
 
@@ -582,7 +584,7 @@ class KodiRemote(cmd.Cmd):
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.kodi_params, verbosity) = get_pykodi_params()
+        (self.kodi_params, self.api_key, verbosity) = get_pykodi_params()
         if verbosity == 2:
             logging.basicConfig(level=logging.DEBUG)
         elif verbosity == 1:
