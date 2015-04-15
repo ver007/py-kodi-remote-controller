@@ -21,6 +21,7 @@ import argparse
 # global constants
 BUFFER_SIZE = 1024
 DISPLAY_NB_LINES = 10
+PROFILE_NAME = 'Kodi library'
 
 # utility functions
 
@@ -576,6 +577,33 @@ def disp_next_playing(properties, items):
                 items[properties['position'] + 1]['title'] )
         print
 
+def get_profile_id(api_key):
+    '''Get echonest profile profile ID'''
+    logging.debug('call get_profile_id')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
+    payload = {
+            'api_key': api_key,
+            'name': PROFILE_NAME}
+    r = requests.get(url, params=payload)
+    if r.status_code == 400:
+        logging.debug('no taste profile found')
+        url = 'http://developer.echonest.com/api/v4/tasteprofile/create'
+        headers = {'content-type': 'multipart/form-data'}
+        payload = {
+                'api_key': api_key,
+                'name': PROFILE_NAME,
+                'type': 'general'}
+        r = requests.post(url, headers=headers, params=payload)
+        ret = r.json()
+        profile_id = ret['response']['id']
+    else:
+        logging.debug('taste profile found')
+        ret = r.json()
+        profile_id = ret['response']['catalog']['id'] 
+    logging.debug('return: %s', r.text)
+    logging.debug('profile id: %s', profile_id)
+    return profile_id
+
 # process return messages
 
 class KodiRemote(cmd.Cmd):
@@ -769,6 +797,16 @@ class KodiRemote(cmd.Cmd):
         items = playlist_get_items(self.kodi_params)
         disp_now_playing(item, properties)
         disp_next_playing(properties, items)
+
+    # echonest functions
+
+    def do_echonest_sync(self, line):
+        '''
+        Sync play count and rating with echonest taste profile
+        Usage: echonest_sync
+        '''
+        logging.debug('call function do_echonest_sync')
+        profile_id = get_profile_id(self.api_key)
 
     def do_EOF(self, line):
         '''Override end of file'''
