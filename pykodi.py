@@ -5,7 +5,7 @@
 # https://github.com/Arn-O/py-kodi-remote-controller/blob/master/LICENSE.
 
 '''
-Kodi remote controller based on TCP transport, JSON and using the (cmd) interface.
+Kodi remote controller based on HTTP/TCP transport, JSON and using the (cmd) interface.
 '''
 
 import socket
