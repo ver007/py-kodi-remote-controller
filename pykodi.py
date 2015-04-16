@@ -310,6 +310,19 @@ def get_albums_search(search_string, obj):
     logging.debug('search result by artist: %s', search_result_artist)
     return sorted(list(set(search_result_title + search_result_artist)))
 
+def get_songs_search(search_string, songs):
+    '''Internal song indexes for a string search'''
+    search_result_title = []
+    search_result_artist = []
+    for song_id in songs.keys():
+        if search_string in songs[song_id]['title'].lower():
+            search_result_title.append(song_id)
+        if search_string in songs[song_id]['artist'].lower():
+            search_result_artist.append(song_id)
+    logging.debug('search result by title: %s', search_result_title)
+    logging.debug('search result by artist: %s', search_result_artist)
+    return sorted(list(set(search_result_title + search_result_artist)))
+
 # getters
 
 def playlist_get_items(server_params):
@@ -725,6 +738,17 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_song_display')
         song_id = parse_single_int(line)
         disp_songs_details(song_id, self.songs)
+    
+    def do_songs_search(self, line):
+        '''
+        Search into the songs
+        Usage: songs_search string
+            List all songs containing the string in the title or artist.
+        '''
+        logging.debug('call function do_songs_search')
+        search_string = line.lower()
+        songs_pos = get_songs_search(search_string, self.songs)
+        disp_songs_index(songs_pos, self.songs)
 
     # playlist functions
 
