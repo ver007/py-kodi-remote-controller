@@ -346,8 +346,7 @@ def get_item(server_params):
                     "title",
                     "artist",
                     "year",
-                    "rating",
-                    "musicbrainztrackid" ] },
+                    "rating" ] },
             "id": 1}
     ret = call_api(server_params, command)
     display_result(ret)
@@ -507,19 +506,32 @@ def disp_albums_index(albums_pos, obj):
     print "Total number of albums: %i" % obj.nb_albums
     print
 
-def disp_songs_index(songs_pos, obj):
+def disp_songs_index(songs_id, kodi_songs):
     '''Display songs list from internal index'''
     logging.debug('call disp_songs_index')
     print
-    for i, song_pos in enumerate(songs_pos):
+    for i, song_id in enumerate(songs_id):
         print ("%02i. %s by %s (%s) [%i]") % (
                 i + 1,
-                obj.songs[song_pos]['title'],
-                obj.songs[song_pos]['artist'],
-                obj.songs[song_pos]['year'],
-                song_pos )
+                kodi_songs[song_id]['title'],
+                kodi_songs[song_id]['artist'],
+                kodi_songs[song_id]['year'],
+                song_id )
     print
-    print "Total number of songs: %i" % obj.nb_songs
+    print "Total number of songs: %i" % len(kodi_songs)
+    print
+
+def disp_songs_details(song_id, kodi_songs):
+    '''Display song details from song id'''
+    logging.debug('call disp_songs_details')
+    print
+    print ("%s by %s (%s)") % (
+            kodi_songs[song_id]['title'],
+            kodi_songs[song_id]['artist'],
+            kodi_songs[song_id]['year'])
+    print ("   Playcount: %i") % kodi_songs[song_id]['playcount']
+    print ("   Rating: %i") % kodi_songs[song_id]['rating']
+    print ("   MusicBrainz ID: %s") % kodi_songs[song_id]['musicbrainztrackid']
     print
 
 def disp_playlist(properties, tracks):
@@ -546,6 +558,7 @@ def disp_playlist(properties, tracks):
 def disp_now_playing(item, properties):
     '''Display the now playing part of display_what'''
     print
+    #TODO: merge somehow with songs_display 
     if item:
         disp_rating = '.....'
         for i in range(item['rating']):
@@ -553,7 +566,6 @@ def disp_now_playing(item, properties):
         print 'Now Playing:'
         print
         print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
-        print "   %s" % (item['musicbrainztrackid'])
         print "   %s - [%s]" % (item['title'], disp_rating)
         print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
                 properties['time']['hours'],
@@ -701,7 +713,18 @@ class KodiRemote(cmd.Cmd):
         songs_pos = range(
                 (page_nb - 1)  * DISPLAY_NB_LINES + 1, 
                 page_nb * DISPLAY_NB_LINES + 1)
-        disp_songs_index(songs_pos, self)
+        disp_songs_index(songs_pos, self.songs)
+
+    def do_songs_display(self, line):
+        '''
+        Display details for a given song
+        Usage songs_display id
+            Display all information about a given song like the playcount
+            or the rating.
+        '''
+        logging.debug('call function do_song_display')
+        song_id = parse_single_int(line)
+        disp_songs_details(song_id, self.songs)
 
     # playlist functions
 
