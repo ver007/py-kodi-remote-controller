@@ -323,6 +323,45 @@ def get_songs_search(search_string, songs):
     logging.debug('search result by artist: %s', search_result_artist)
     return sorted(list(set(search_result_title + search_result_artist)))
 
+def set_songs_sync(server_params, songs):
+    '''Sync playcount and rating'''
+    logging.debug('call set_songs_sync')
+    nb_songs = len(songs)
+    logging.debug('number of songs: %i', nb_songs)
+    limits = range(0, nb_songs, 20)
+    if not limits[-1] == nb_songs:
+        limits.append(nb_songs)
+    for start, end in zip(limits[:-1], limits[1:]):
+        logging.info('Processing song %i to %i ...', start, end)
+        while True:
+            try:
+                command = {"jsonrpc": "2.0",
+                        "method": "AudioLibrary.GetSongs",
+                         "params": {
+                            "properties": [
+                                "rating",
+                                "playcount",
+                                ],
+                            "limits": { 
+                                "start": start, 
+                                "end": end } },
+                        "id": 1}
+                ret = call_api(server_params, command)
+                for r_song in ret['result']['songs']:
+                    if songs[r_song['songid']]['rating'] != r_song['rating']:
+                        logging.info(
+                                'updating rating for %s!',
+                                r_song['songid'])
+                        songs[r_song['songid']]['rating'] = r_song['rating']
+                    if songs[r_song['songid']]['playcount'] != r_song['playcount']:
+                        logging.info(
+                                'updating playcount for %s!',
+                                r_song['songid'])
+                        songs[r_song['songid']]['playcount'] = r_song['playcount']
+                break
+            except KeyError:
+                logging.info('error when loading library, retry')
+
 # getters
 
 def playlist_get_items(server_params):
@@ -750,6 +789,15 @@ class KodiRemote(cmd.Cmd):
         songs_pos = get_songs_search(search_string, self.songs)
         disp_songs_index(songs_pos, self.songs)
 
+    def do_songs_sync(self, line):
+        '''
+        Sync playcount and rating
+        Usage: songs_sync
+            Sync playcount and rating from the Kodi server to PyKodi.
+        '''
+        logging.debug('call function do_songs_sync')
+        set_songs_sync(self.kodi_params, self.songs)
+    
     # playlist functions
 
     def do_playlist_show(self, line):
