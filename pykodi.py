@@ -57,7 +57,6 @@ def get_pykodi_params():
 
 # API call management
 
-
 def call_api(server_params, command):
     if server_params['tcp']:
         ret = call_api_tcp(
@@ -210,6 +209,7 @@ def get_audio_library_from_server(obj):
                             'musicbrainztrackid'] = song['musicbrainztrackid']
                 break
             except KeyError:
+                #TODO: improve error catching, limit to API errors
                 logging.info('error when loading library, retry')
     # Loading albums
     nb_albums = get_nb_albums(obj.kodi_params)
@@ -361,6 +361,39 @@ def set_songs_sync(server_params, songs):
                 break
             except KeyError:
                 logging.info('error when loading library, retry')
+
+def echonest_sync(api_key, profile_id, songs):
+    '''Sync songs with echonest tasteprofile'''
+    logging.debug('call echonest_sync')
+    nb_songs = len(songs)
+    # slicing
+    limits = range(1, (nb_songs + 1), 20)
+    if not limits[-1] == (nb_songs + 1):
+        limits.append(nb_songs + 1)
+    for start, end in zip(limits[:-1], limits[1:]):
+        logging.info('Processing song %i to %i ...', start, end)
+        command = []
+        songs_id_slice = range(start, end)
+        for song_id in songs_id_slice:
+            rating = songs[song_id]['rating'] * 2
+            item_id = 'musicbrainz:song:' + songs[song_id]['musicbrainztrackid']
+            command.append({
+                "action": 'update',
+                "item": {
+                    "item_id": item_id, 
+                    "rating": rating, 
+                    "play_count": songs[song_id]['playcount']
+                    }
+                })
+        url = 'http://developer.echonest.com/api/v4/tasteprofile/update'
+        headers = {'content-type': 'multipart/form-data'}
+        payload = {
+                'api_key': api_key,
+                'id': profile_id,
+                'data': json.dumps(command)}
+        logging.debug('command: %s', command)
+        r = requests.post(url, headers=headers, params=payload)
+        logging.debug('return: %s', r.text)
 
 # getters
 
@@ -902,6 +935,7 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_echonest_sync')
         profile_id = get_profile_id(self.api_key)
+        echonest_sync(self.api_key, profile_id, self.songs)    
 
     def do_EOF(self, line):
         '''Override end of file'''
