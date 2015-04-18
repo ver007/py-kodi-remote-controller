@@ -13,6 +13,7 @@ import requests
 import json
 from datetime import timedelta
 import pickle
+import time
 import random
 import cmd
 import logging
@@ -367,7 +368,7 @@ def echonest_sync(api_key, profile_id, songs):
     logging.debug('call echonest_sync')
     nb_songs = len(songs)
     # slicing
-    limits = range(1, (nb_songs + 1), 20)
+    limits = range(1, (nb_songs + 1), 40)
     if not limits[-1] == (nb_songs + 1):
         limits.append(nb_songs + 1)
     for start, end in zip(limits[:-1], limits[1:]):
@@ -393,7 +394,11 @@ def echonest_sync(api_key, profile_id, songs):
                 'data': json.dumps(command)}
         logging.debug('command: %s', command)
         r = requests.post(url, headers=headers, params=payload)
-        logging.debug('return: %s', r.text)
+        if r.status_code == 200:
+            logging.debug('return: %s', r.text)
+        else:
+            logging.info('return: %s', r.text)
+        time.sleep(0.51)
 
 # getters
 
