@@ -422,10 +422,9 @@ def echonest_playlist(api_key, profile_id):
     en_songs = ret['response']['songs']
     playlist = []
     for en_song in en_songs:
-        for foreign_id in en_song['foreign_ids']:
-            en_id = foreign_id['foreign_id']
-            kodi_id = en_id.replace(profile_id + ':song:', "")
-            playlist.append(kodi_id)
+        en_id = en_song['foreign_ids'][0]['foreign_id']
+        kodi_id = en_id.replace(profile_id + ':song:', "")
+        playlist.append(kodi_id)
     return playlist
 
 def echonest_info(api_key, profile_id):
