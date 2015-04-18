@@ -605,6 +605,21 @@ def playlist_add_songs(song_ids, server_params):
         ret = call_api(server_params, command)
         display_result(ret)
 
+def player_get_active(server_params):
+    '''Returns active audio players (boolean)'''
+    logging.debug('call function playlist_get_active')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.GetActivePlayers",
+            "id": 1,
+            }
+    ret = call_api(server_params, command)
+    display_result(ret)
+    if ret['result']:
+        active = True
+    else:
+        active = False
+    return active
+
 def player_open(server_params):
     '''Open the audio playlist'''
     logging.debug('call function player_open')
@@ -635,7 +650,8 @@ def player_play_pause(server_params):
     command = {"jsonrpc": "2.0",
             "method": "Player.PlayPause",
             "params": {
-                "playerid": 0 },
+                "playerid": 0,
+                },
             "id": 1}
     ret = call_api(server_params, command)
     display_result(ret)
@@ -994,7 +1010,10 @@ class KodiRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        player_play_pause(self.kodi_params)
+        if player_get_active(self.kodi_params):
+            player_play_pause(self.kodi_params)
+        else:
+            player_open(self.kodi_params)
 
     def do_play_stop(self, line):
         '''
