@@ -1,4 +1,5 @@
 #!/usr/bin/env python
+# coding=utf-8
 #
 # Copyright 2015 Arn-O. See the LICENSE file at the top-level directory of this
 # distribution and at
@@ -23,6 +24,8 @@ import argparse
 BUFFER_SIZE = 1024
 DISPLAY_NB_LINES = 10
 PROFILE_NAME = 'Kodi library'
+
+#TODO: add instrospect
 
 # utility functions
 
@@ -366,9 +369,11 @@ def set_songs_sync(server_params, songs):
 def echonest_sync(api_key, profile_id, songs):
     '''Sync songs with echonest tasteprofile'''
     logging.debug('call echonest_sync')
+    #TODO: cache the profile ID
+    #TODO: create routines for echonest API calls + HTTP Kodi calls
     nb_songs = len(songs)
     # slicing
-    limits = range(1, (nb_songs + 1), 40)
+    limits = range(1, (nb_songs + 1), 30)
     if not limits[-1] == (nb_songs + 1):
         limits.append(nb_songs + 1)
     for start, end in zip(limits[:-1], limits[1:]):
@@ -377,11 +382,12 @@ def echonest_sync(api_key, profile_id, songs):
         songs_id_slice = range(start, end)
         for song_id in songs_id_slice:
             rating = songs[song_id]['rating'] * 2
-            item_id = 'musicbrainz:song:' + songs[song_id]['musicbrainztrackid']
+            mb_song_id = 'musicbrainz:song:' + songs[song_id]['musicbrainztrackid']
             command.append({
                 "action": 'update',
                 "item": {
-                    "song_id": item_id,
+                    "item_id": str(song_id),
+                    "song_id": mb_song_id,
                     "rating": rating, 
                     "play_count": songs[song_id]['playcount']
                     }
@@ -406,11 +412,21 @@ def echonest_playlist(api_key, profile_id):
     url = 'http://developer.echonest.com/api/v4/playlist/static'
     payload = {"api_key": api_key,
               "type": 'catalog',
-              "seed_catalog": profile_id
+              "seed_catalog": profile_id,
+              "bucket": 'id:' + profile_id
               }
     r = requests.get(url, params=payload)
-    print(r.url)
-    print(r.text)
+    logging.debug('URL: %s', r.url)
+    logging.debug('return: %s', r.text)
+    ret = r.json()
+    en_songs = ret['response']['songs']
+    playlist = []
+    for en_song in en_songs:
+        for foreign_id in en_song['foreign_ids']:
+            en_id = foreign_id['foreign_id']
+            kodi_id = en_id.replace(profile_id + ':song:', "")
+            playlist.append(kodi_id)
+    return playlist
 
 def echonest_info(api_key, profile_id):
     '''Display info about echonest profile'''
@@ -420,6 +436,25 @@ def echonest_info(api_key, profile_id):
               "id": profile_id
               }
     r = requests.get(url, params=payload)
+    print(r.url)
+    print(r.text)
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/read'
+    payload = {"api_key": api_key,
+              "id": profile_id
+              }
+    r = requests.get(url, params=payload)
+    print(r.url)
+    print(r.text)
+
+def echonest_delete(api_key, profile_id):
+    '''Delete echonest tasteprofile'''
+    logging.debug('call echonest_delete')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/delete'
+    headers = {'content-type': 'multipart/form-data'}
+    payload = {"api_key": api_key,
+              "id": profile_id
+              }
+    r = requests.post(url, headers=headers, params=payload)
     print(r.url)
     print(r.text)
 
@@ -555,6 +590,20 @@ def playlist_add(album_id, server_params):
             "id": 1}
     ret = call_api(server_params, command)
     display_result(ret)
+
+def playlist_add_songs(song_ids, server_params):
+    '''Add a list of songs to the audio playlist'''
+    logging.debug('call function playlist_add')
+    for song_id in song_ids:
+        command = {"jsonrpc": "2.0",
+                "method": "Playlist.Add",
+                "params": {
+                    "playlistid": 0,
+                    "item": {
+                        "songid": int(song_id) } },
+                "id": 1}
+        ret = call_api(server_params, command)
+        display_result(ret)
 
 def player_open(server_params):
     '''Open the audio playlist'''
@@ -906,8 +955,9 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_playlist_add')
         profile_id = get_profile_id(self.api_key)
-        playlist = echonest_playlist(self.api_key, profile_id)
-        print playlist
+        songids = echonest_playlist(self.api_key, profile_id)
+        playlist_clear(self.kodi_params)
+        playlist_add_songs(songids, self.kodi_params)
 
     # play functions
 
@@ -986,6 +1036,15 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_echonest_info')
         profile_id = get_profile_id(self.api_key)
         echonest_info(self.api_key, profile_id)
+
+    def do_echonest_delete(self, line):
+        '''
+        Delete echonest taste profile.
+        Usage: echonest_info
+        '''
+        logging.debug('call function do_echonest_delete')
+        profile_id = get_profile_id(self.api_key)
+        echonest_delete(self.api_key, profile_id)
 
     def do_EOF(self, line):
         '''Override end of file'''
