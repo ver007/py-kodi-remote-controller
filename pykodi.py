@@ -381,7 +381,7 @@ def echonest_sync(api_key, profile_id, songs):
             command.append({
                 "action": 'update',
                 "item": {
-                    "item_id": item_id, 
+                    "song_id": item_id,
                     "rating": rating, 
                     "play_count": songs[song_id]['playcount']
                     }
@@ -399,6 +399,29 @@ def echonest_sync(api_key, profile_id, songs):
         else:
             logging.info('return: %s', r.text)
         time.sleep(0.51)
+
+def echonest_playlist(api_key, profile_id):
+    '''Create a premium static playlist'''
+    logging.debug('call echonest_playlist')
+    url = 'http://developer.echonest.com/api/v4/playlist/static'
+    payload = {"api_key": api_key,
+              "type": 'catalog',
+              "seed_catalog": profile_id
+              }
+    r = requests.get(url, params=payload)
+    print(r.url)
+    print(r.text)
+
+def echonest_info(api_key, profile_id):
+    '''Display info about echonest profile'''
+    logging.debug('call echonest_info')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
+    payload = {"api_key": api_key,
+              "id": profile_id
+              }
+    r = requests.get(url, params=payload)
+    print(r.url)
+    print(r.text)
 
 # getters
 
@@ -873,6 +896,19 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_playlist_clear')
         playlist_clear(self.kodi_params)
 
+    def do_playlist_tasteprofile(self, line):
+        '''
+        Create a playlist from echonest test profile
+        Usage: playlist_tasteprofile
+            Generate and play a new playlist based on
+            echonest taste profile. The current playlist
+            is removed before.
+        '''
+        logging.debug('call function do_playlist_add')
+        profile_id = get_profile_id(self.api_key)
+        playlist = echonest_playlist(self.api_key, profile_id)
+        print playlist
+
     # play functions
 
     def do_play_album(self, line):
@@ -941,6 +977,15 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_echonest_sync')
         profile_id = get_profile_id(self.api_key)
         echonest_sync(self.api_key, profile_id, self.songs)    
+
+    def do_echonest_info(self, line):
+        '''
+        Display info about the echonest taste profile.
+        Usage: echonest_info
+        '''
+        logging.debug('call function do_echonest_info')
+        profile_id = get_profile_id(self.api_key)
+        echonest_info(self.api_key, profile_id)
 
     def do_EOF(self, line):
         '''Override end of file'''
