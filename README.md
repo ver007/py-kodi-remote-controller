@@ -43,6 +43,14 @@ From the prompt, use the ``help`` command to have the list of available methods,
 (Kodi (OpenELEC)) play_album
 ```
 
+## Echonest support
+
+This feature is experimental but promising and delivers great results.
+
+Echnonest support is automatically activated if you give an API key to PyKodi with the ``-enk`` switch. Request you own key on the [registration page][echonest-register]. The standard key is limited to 20 calls by minute, which is really low. You can request an upgrade to 120 calls by minute for free.
+
+The song matching relies heavily on MusicBrainz. Your audio files need to be properly tagged with their MusicBrainzID.
+
 ## Usage
 
 ### Start arguments
@@ -65,11 +73,18 @@ The full list of methods are displayed with the ``help`` command from the prompt
 + ``play_`` start or stop the player
 + ``playlist_`` manage your audio playlist
 
+
 ### Local library update
 
 This will be developed in a next version. Just delete the pickle files and start again the program.
 
-Since the version 0.2, the songs audio library is also stored locally. The playcount and rating of each songs can be sync with ``songs_sync``. 
+Since the version 0.2, the songs audio library is also stored locally. The playcount and rating of each songs can be synced with ``songs_sync``. 
+
+### Generate a personalized playlist
+
+Update your tasteprofile with ``echonest_sync``. This will be used by echonest to identify your listening preferences.
+
+Generate a playlist with ``playlist_tasteprofile`` and play it with ``play_pause``. To improve the recommandations, rate your favorite songs, sync with ``songs_syns`` and update your tasteprofile with ``echonest_sync``.
 
 ## Contributions
 
@@ -96,4 +111,4 @@ The program can be started in a highly verbose mode with the ``-vv`` argument. A
 [api-example]: http://kodi.wiki/view/JSON-RPC_API/Examples
 [python-json]: http://docs.python.org/2/library/json.html
 [cmd-docs]: https://docs.python.org/2/library/cmd.html
-[cmd-tuto]: http://pymotw.com/2/cmd/
+[echonest-register]: https://developer.echonest.com/account/register
