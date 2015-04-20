@@ -3,13 +3,17 @@ py-kodi-remote-controller
 
 Kodi remote controller written in Python
 
-Just a fun small project to explore JSON, TCP requests, and play with my favorite HTPC, Kodi.
+Just a fun small project to explore JSON, HTTP/TCP requests, and play with my favorite HTPC, Kodi.
 
-Well, sometimes I feel bored to seek the TV remote or to launch [Yatse][yatse] on my phone when coding. With this Python script I can now control the audio player of Kodi directly from a terminal. Life is good.
+Options to remote control Kodi are numerous, the Android app [Yatse][yatse] is fantastic, or the web UI [chorus][chorus] is pretty good. But in some specific context it is great to control it from a terminal, and PyKodi does it. Life is good.
+
+With the version 0.2, PyKodi now integrates echnonest to generate awesome playlist. Life is really good.
 
 ## Quick start
 
 First step, clone this repository localy. Kodi needs to be configured to accept remote controls. This is done differently based on the transport that you want to use.
+
+Note that this will install the version 0.2, considered as an alpha release (under optimized and full of bugs). Go to the releases a select a beta one if you want more stability.
 
 ### HTTP
 
@@ -43,7 +47,9 @@ From the prompt, use the ``help`` command to have the list of available methods,
 
 ### Start arguments
 
-The program uses the ``argparse`` module, so all arguments can be displayed using the ``-h`` option. The verbosity has two levels, try ``-v`` or ``-vv``. The default port for TCP calls is used. If you changed it to something else, try ``-p``.
+The program uses the ``argparse`` module, so all arguments can be displayed using the ``-h`` option. The verbosity has two levels, try ``-v`` or ``-vv``. The default port for TCP calls is used (9090). If you changed it to something else, or for HTTP transport, try ``-p``.
+
+For HTTP transport, if the authentication is required, use the ``-u`` switch for the user and ``-pw`` for the password.
 
 ### User interface
 
@@ -63,6 +69,8 @@ The full list of methods are displayed with the ``help`` command from the prompt
 
 This will be developed in a next version. Just delete the pickle files and start again the program.
 
+Since the version 0.2, the songs audio library is also stored locally. The playcount and rating of each songs can be sync with ``songs_sync``. 
+
 ## Contributions
 
 Contributions are welcome and easy.
@@ -79,8 +87,10 @@ The program can be started in a highly verbose mode with the ``-vv`` argument. A
 + Python docs, ["18.2. json — JSON encoder and decoder"][python-json], using json in Python
 
 [yatse]: http://yatse.leetzone.org/redmine
+[chorus]: https://github.com/jez500/chorus
 [http]: http://kodi.wiki/?title=JSON-RPC_API#HTTP
 [tcp]: http://kodi.wiki/?title=JSON-RPC_API#TCP
+[cmd-tutorial]: http://pymotw.com/2/cmd/
 [api-gen]: http://kodi.wiki/?title=JSON-RPC_API
 [api-v6]: http://kodi.wiki/index.php?title=JSON-RPC_API/v6
 [api-example]: http://kodi.wiki/view/JSON-RPC_API/Examples
