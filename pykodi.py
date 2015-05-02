@@ -12,7 +12,7 @@ Kodi remote controller based on HTTP/TCP transport, JSON and using the (cmd) int
 import socket
 import requests
 import json
-from datetime import timedelta
+#from datetime import timedelta
 import pickle
 import time
 import random
@@ -26,6 +26,9 @@ DISPLAY_NB_LINES = 10
 PROFILE_NAME = 'Kodi library'
 
 #TODO: add instrospect
+#TODO: display number of transactions calls in echonest API
+#TODO: persistent sync data
+#TODO: delta for echonest sync
 
 # utility functions
 
@@ -205,7 +208,8 @@ def get_audio_library_from_server(obj):
                 for song in ret['result']['songs']:
                     obj.songs[song['songid']] = {}
                     obj.songs[song['songid']]['title'] = song['title']
-                    obj.songs[song['songid']]['artist'] = song['artist'][0]
+                    if song['artist']:
+                        obj.songs[song['songid']]['artist'] = song['artist'][0]
                     obj.songs[song['songid']]['year'] = song['year']
                     obj.songs[song['songid']]['rating'] = song['rating']
                     obj.songs[song['songid']]['playcount'] = song['playcount']
