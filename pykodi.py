@@ -13,6 +13,7 @@ import socket
 import requests
 import json
 #from datetime import timedelta
+from progressbar import *
 import pickle
 import time
 import random
@@ -178,15 +179,24 @@ def get_audio_library_from_server(obj):
     '''Load the library in memory from the Kodi server'''
     logging.debug('get_audio_library_from_server')
     print "Loading the Kodi server library, this may be very long"
+    print
     # Loading songs
     nb_songs = get_nb_songs(obj.kodi_params)
     logging.debug('number of songs: %i', nb_songs)
     obj.nb_songs = nb_songs
+    widgets = [
+        'Songs: ', Percentage(),
+        ' ', Bar(marker='#',left='[',right=']'),
+        ' (', Counter(), ' in ' + str(nb_songs) + ') ',
+        ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=nb_songs)
+    pbar.start()
     limits = range(0, nb_songs, 20)
     if not limits[-1] == nb_songs:
         limits.append(nb_songs)
     for start, end in zip(limits[:-1], limits[1:]):
         logging.info('Processing song %i to %i ...', start, end)
+        pbar.update(start)
         while True:
             try:
                 command = {"jsonrpc": "2.0",
@@ -219,15 +229,24 @@ def get_audio_library_from_server(obj):
             except KeyError:
                 #TODO: improve error catching, limit to API errors
                 logging.info('error when loading library, retry')
+    pbar.finish()
     # Loading albums
     nb_albums = get_nb_albums(obj.kodi_params)
     logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
+    widgets = [
+        'Albums: ', Percentage(),
+        ' ', Bar(marker='#',left='[',right=']'),
+        ' (', Counter(), ' in ' + str(nb_albums) + ') ',
+        ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=nb_albums)
+    pbar.start()
     limits = range(0, nb_albums, 10)
     if not limits[-1] == nb_albums:
         limits.append(nb_albums)
     for start, end in zip(limits[:-1], limits[1:]):
         logging.info('Processing album %i to %i ...', start, end)
+        pbar.update(start)
         while True:
             try:
                 command = {"jsonrpc": "2.0",
@@ -251,6 +270,8 @@ def get_audio_library_from_server(obj):
                 break
             except KeyError:
                 logging.info('error when loading library, retry')
+    pbar.finish()
+    print
     f = open('songs.pickle', 'wb')
     pickle.dump(obj.songs, f)
     f.close()
