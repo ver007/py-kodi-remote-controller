@@ -138,11 +138,9 @@ def is_library_files():
     '''Check if there are library local files'''
     logging.debug('call function is_library_files')
     ret = True
-    ret = ret and is_file('albums_id.pickle')
-    ret = ret and is_file('albums_title.pickle')
-    ret = ret and is_file('albums_artist.pickle')
-    ret = ret and is_file('albums_year.pickle')
-    logging.debug('library files check: %s', ret)
+    ret = ret and is_file('albums.pickle')
+    ret = ret and is_file('songs.pickle')
+    logging.info('library files check: %s', ret)
     return ret
 
 def get_audio_library(obj):
@@ -161,19 +159,10 @@ def get_audio_library_from_files(obj):
     obj.songs = pickle.load(f)
     f.close()
     obj.nb_songs = len(obj.songs)
-    f = open('albums_id.pickle', 'rb')
-    obj.albums_id = pickle.load(f)
+    f = open('albums.pickle', 'rb')
+    obj.albums = pickle.load(f)
     f.close()
-    f = open('albums_title.pickle', 'rb')
-    obj.albums_title = pickle.load(f)
-    f.close()
-    f = open('albums_artist.pickle', 'rb')
-    obj.albums_artist = pickle.load(f)
-    f.close()
-    f = open('albums_year.pickle', 'rb')
-    obj.albums_year = pickle.load(f)
-    f.close()
-    obj.nb_albums = len(obj.albums_id)
+    obj.nb_songs = len(obj.songs)
 
 def get_audio_library_from_server(obj):
     '''Load the library in memory from the Kodi server'''
@@ -262,11 +251,10 @@ def get_audio_library_from_server(obj):
                         "id": 1}
                 ret = call_api(obj.kodi_params, command)
                 for album in ret['result']['albums']:
-                    #TODO: change to a dict of dicts
-                    obj.albums_id.append(album['albumid'])
-                    obj.albums_title.append(album['title'])
-                    obj.albums_artist.append(album['artist'])
-                    obj.albums_year.append(album['year'])
+                    obj.albums[album['albumid']] = {}
+                    obj.albums[album['albumid']]['title'] = album['title']
+                    obj.albums[album['albumid']]['artist'] = album['artist']
+                    obj.albums[album['albumid']]['year'] = album['year']
                 break
             except KeyError:
                 logging.info('error when loading library, retry')
@@ -275,17 +263,8 @@ def get_audio_library_from_server(obj):
     f = open('songs.pickle', 'wb')
     pickle.dump(obj.songs, f)
     f.close()
-    f = open('albums_id.pickle', 'wb')
-    pickle.dump(obj.albums_id, f)
-    f.close()
-    f = open('albums_title.pickle', 'wb')
-    pickle.dump(obj.albums_title, f)
-    f.close()
-    f = open('albums_artist.pickle', 'wb')
-    pickle.dump(obj.albums_artist, f)
-    f.close()
-    f = open('albums_year.pickle', 'wb')
-    pickle.dump(obj.albums_year, f)
+    f = open('albums.pickle', 'wb')
+    pickle.dump(obj.albums, f)
     f.close()
 
 # parsers
@@ -836,11 +815,7 @@ class KodiRemote(cmd.Cmd):
         # initialize library description
         self.nb_songs = 0
         self.songs = {}
-        self.nb_albums = 0
-        self.albums_id = []
-        self.albums_title = []
-        self.albums_artist = []
-        self.albums_year = []
+        self.albums = {}
         # fill data
         get_audio_library(self)
         # customize prompt
