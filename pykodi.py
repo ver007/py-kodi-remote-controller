@@ -162,7 +162,7 @@ def get_audio_library_from_files(obj):
     f = open('albums.pickle', 'rb')
     obj.albums = pickle.load(f)
     f.close()
-    obj.nb_songs = len(obj.songs)
+    obj.nb_albums = len(obj.albums)
 
 def get_audio_library_from_server(obj):
     '''Load the library in memory from the Kodi server'''
@@ -672,19 +672,19 @@ def player_stop(server_params):
 
 # display function
 
-def disp_albums_index(albums_pos, obj):
+def disp_albums_index(albums_id, kodi_albums):
     '''Display albums list from internal index'''
     logging.debug('call disp_albums_index')
     print
-    for i, album_pos in enumerate(albums_pos):
+    for i, album_id in enumerate(albums_id):
         print ("%02i. %s by %s (%s) [%i]") % (
                 i + 1,
-                obj.albums_title[album_pos],
-                obj.albums_artist[album_pos][0],
-                obj.albums_year[album_pos],
-                obj.albums_id[album_pos] )
+                kodi_albums[album_id]['title'],
+                kodi_albums[album_id]['artist'],
+                kodi_albums[album_id]['year'],
+                album_id )
     print
-    print "Total number of albums: %i" % obj.nb_albums
+    print "Total number of albums: %i" % len(kodi_albums)
     print
 
 def disp_songs_index(songs_id, kodi_songs):
@@ -815,6 +815,7 @@ class KodiRemote(cmd.Cmd):
         # initialize library description
         self.nb_songs = 0
         self.songs = {}
+        self.nb_albums = 0
         self.albums = {}
         # fill data
         get_audio_library(self)
@@ -848,9 +849,9 @@ class KodiRemote(cmd.Cmd):
             logging.info('no page number provided')
             page_nb = random.randrange(int(self.nb_albums / 10) + 1)
         albums_pos = range(
-                (page_nb - 1)  * DISPLAY_NB_LINES, 
-                page_nb * DISPLAY_NB_LINES )
-        disp_albums_index(albums_pos, self)
+                (page_nb - 1) * DISPLAY_NB_LINES + 1,
+                page_nb * DISPLAY_NB_LINES + 1)
+        disp_albums_index(albums_pos, self.albums)
 
     def do_albums_recent(self, line):
         '''
@@ -888,7 +889,7 @@ class KodiRemote(cmd.Cmd):
             logging.info('no page number provided')
             page_nb = random.randrange(int(self.nb_songs / 10) + 1)
         songs_pos = range(
-                (page_nb - 1)  * DISPLAY_NB_LINES + 1, 
+                (page_nb - 1) * DISPLAY_NB_LINES + 1,
                 page_nb * DISPLAY_NB_LINES + 1)
         disp_songs_index(songs_pos, self.songs)
 
