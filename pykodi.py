@@ -304,17 +304,16 @@ def parse_get_string(line):
 
 # other
 
-def get_albums_search(search_string, obj):
+def get_albums_search(search_string, albums):
     '''Internal album indexes for a string search'''
     search_result_title = []
-    for i, album_title in enumerate(obj.albums_title):
-        if search_string in album_title.lower():
-            search_result_title.append(i)
     search_result_artist = []
+    for album_id in albums.keys():
+        if search_string in albums[album_id]['title'].lower():
+            search_result_title.append(album_id)
+        if search_string in albums[album_id]['artist'].lower():
+            search_result_artist.append(album_id)
     logging.debug('search result by title: %s', search_result_title)
-    for i, album_artist in enumerate(obj.albums_artist):
-        if search_string in album_artist[0].lower():
-            search_result_artist.append(i)
     logging.debug('search result by artist: %s', search_result_artist)
     return sorted(list(set(search_result_title + search_result_artist)))
 
@@ -835,7 +834,7 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_albums_random')
         albums_pos = random.sample(xrange(self.nb_albums), DISPLAY_NB_LINES)
-        disp_albums_index(albums_pos, self)
+        disp_albums_index(albums_pos, self.albums)
 
     def do_albums_page(self, line):
         '''
@@ -860,9 +859,9 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_albums_recent')
         albums_pos = range(
-                self.nb_albums - DISPLAY_NB_LINES, 
-                self.nb_albums)
-        disp_albums_index(albums_pos, self)
+                self.nb_albums + 1 - DISPLAY_NB_LINES, 
+                self.nb_albums + 1)
+        disp_albums_index(albums_pos, self.albums)
 
     def do_albums_search(self, line):
         '''
@@ -872,8 +871,8 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_albums_search')
         search_string = line.lower()
-        albums_pos = get_albums_search(search_string, self)
-        disp_albums_index(albums_pos, self)
+        albums_pos = get_albums_search(search_string, self.albums)
+        disp_albums_index(albums_pos, self.albums)
 
     # songs functions
     
