@@ -253,7 +253,7 @@ def get_audio_library_from_server(obj):
                 for album in ret['result']['albums']:
                     obj.albums[album['albumid']] = {}
                     obj.albums[album['albumid']]['title'] = album['title']
-                    obj.albums[album['albumid']]['artist'] = album['artist']
+                    obj.albums[album['albumid']]['artist'] = album['artist'][0]
                     obj.albums[album['albumid']]['year'] = album['year']
                 break
             except KeyError:
