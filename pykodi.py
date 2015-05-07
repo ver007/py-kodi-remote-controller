@@ -988,8 +988,10 @@ class KodiRemote(cmd.Cmd):
         album_id = parse_single_int(line)
         if not album_id:
             logging.info('no album id provided')
-            album_id = random.randrange(self.nb_albums)
+            album_index = random.randrange(self.nb_albums)
+            album_id = self.albums.keys()[album_index]
             print "Album %i will be played" % album_id
+            print
         playlist_clear(self.kodi_params)
         playlist_add(album_id, self.kodi_params)
         player_open(self.kodi_params)
