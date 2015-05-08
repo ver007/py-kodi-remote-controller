@@ -227,6 +227,9 @@ def get_audio_library_from_server(obj):
                     obj.songs[song['songid']]['playcount'] = song['playcount']
                     obj.songs[song['songid']][
                             'musicbrainztrackid'] = song['musicbrainztrackid']
+                    # store the last update to echonest profile
+                    obj.songs[song['songid']]['rating_en'] = 0
+                    obj.songs[song['songid']]['playcount_en'] = 0
                 break
             except KeyError:
                 #TODO: improve error catching, limit to API errors
@@ -404,16 +407,39 @@ def echonest_sync(api_key, profile_id, songs):
     logging.debug('call echonest_sync')
     #TODO: cache the profile ID
     #TODO: create routines for echonest API calls + HTTP Kodi calls
-    nb_songs = len(songs)
+    # determine delta
+    songs_id_delta = []
+    for song_id in songs.keys():
+        if not songs[song_id]['rating'] == songs[song_id]['rating_en']:
+            songs_id_delta.append(song_id)
+            continue
+        if not songs[song_id]['playcount'] == songs[song_id]['playcount_en']:
+            songs_id_delta.append(song_id)
+            continue
+    nb_songs_delta = len(songs_id_delta)
+    logging.info('delta size: %i', nb_songs_delta)
+    logging.debug('delta songs %s', songs_id_delta)
+    print
+    print "Sync songs to the tasteprofile (this can be very very long)"
+    print
+    widgets = [
+            'Songs: ', Percentage(),
+            ' ', Bar(marker='#',left='[',right=']'),
+            ' (', Counter(), ' in ' + str(nb_songs_delta) + ') ',
+            ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=nb_songs_delta)
+    pbar.start()
+    
     # slicing
-    limits = range(1, (nb_songs + 1), 30)
-    if not limits[-1] == (nb_songs + 1):
-        limits.append(nb_songs + 1)
+    limits = range(0, nb_songs_delta, 30)
+    if not limits[-1] == nb_songs_delta:
+        limits.append(nb_songs_delta)
     for start, end in zip(limits[:-1], limits[1:]):
         logging.info('Processing song %i to %i ...', start, end)
+        pbar.update(start)
         command = []
         songs_id_slice = range(start, end)
-        for song_id in songs_id_slice:
+        for song_id in songs_id_delta:
             rating = songs[song_id]['rating'] * 2
             mb_song_id = 'musicbrainz:song:' + songs[song_id]['musicbrainztrackid']
             command.append({
@@ -425,6 +451,8 @@ def echonest_sync(api_key, profile_id, songs):
                     "play_count": songs[song_id]['playcount']
                     }
                 })
+            songs[song_id]['rating_en'] = songs[song_id]['rating']
+            songs[song_id]['playcount_en'] = songs[song_id]['playcount']
         url = 'http://developer.echonest.com/api/v4/tasteprofile/update'
         headers = {'content-type': 'multipart/form-data'}
         payload = {
@@ -436,8 +464,11 @@ def echonest_sync(api_key, profile_id, songs):
         if r.status_code == 200:
             logging.debug('return: %s', r.text)
         else:
-            logging.info('return: %s', r.text)
+            logging.error('return: %s', r.text)
         time.sleep(0.51)
+    pbar.finish()
+    save_songs(songs)
+    print
 
 def echonest_playlist(api_key, profile_id):
     '''Create a premium static playlist'''
@@ -739,9 +770,14 @@ def disp_songs_details(song_id, kodi_songs):
             kodi_songs[song_id]['title'],
             kodi_songs[song_id]['artist'],
             kodi_songs[song_id]['year'])
-    print ("   Playcount: %i") % kodi_songs[song_id]['playcount']
-    print ("   Rating: %i") % kodi_songs[song_id]['rating']
-    print ("   MusicBrainz ID: %s") % kodi_songs[song_id]['musicbrainztrackid']
+    print "   Playcount: %i (%i)" % (
+            kodi_songs[song_id]['playcount'],
+            kodi_songs[song_id]['playcount_en'])
+    print "   Rating: %i (%i)" % (
+            kodi_songs[song_id]['rating'],
+            kodi_songs[song_id]['rating_en'])
+    print "   MusicBrainz ID: %s" % kodi_songs[song_id]['musicbrainztrackid']
+    
     print
 
 def disp_playlist(properties, tracks):
@@ -978,7 +1014,9 @@ class KodiRemote(cmd.Cmd):
         if not album_id:
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
+            print
             print "Album %i will be added to the playlist" % album_id
+            print
         playlist_add(album_id, self.kodi_params)
 
     def do_playlist_clear(self, line):
@@ -1076,8 +1114,8 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_echonest_sync')
         profile_id = get_profile_id(self.api_key)
-        echonest_sync(self.api_key, profile_id, self.songs)    
-
+        echonest_sync(self.api_key, profile_id, self.songs)
+        
     def do_echonest_info(self, line):
         '''
         Display info about the echonest taste profile.
