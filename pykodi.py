@@ -28,7 +28,6 @@ PROFILE_NAME = 'Kodi library'
 
 #TODO: add instrospect
 #TODO: display number of transactions calls in echonest API
-#TODO: persistent sync data
 #TODO: delta for echonest sync
 
 # utility functions
@@ -152,6 +151,20 @@ def get_audio_library(obj):
     else:
         get_audio_library_from_server(obj)
 
+def save_songs(songs):
+    '''Save songs to local files'''
+    logging.debug('call function save_songs')
+    f = open('songs.pickle', 'wb')
+    pickle.dump(songs, f)
+    f.close()
+
+def save_albums(albums):
+    '''Save albums to local files'''
+    logging.debug('call function save_albums')
+    f = open('albums.pickle', 'wb')
+    pickle.dump(albums, f)
+    f.close()
+
 def get_audio_library_from_files(obj):
     '''Load the library in memory from local files'''
     logging.debug('call function get_audio_library_from_files')
@@ -219,6 +232,7 @@ def get_audio_library_from_server(obj):
                 #TODO: improve error catching, limit to API errors
                 logging.info('error when loading library, retry')
     pbar.finish()
+    save_albums(obj.albums)
     # Loading albums
     nb_albums = get_nb_albums(obj.kodi_params)
     logging.debug('number of albums: %i', nb_albums)
@@ -259,13 +273,8 @@ def get_audio_library_from_server(obj):
             except KeyError:
                 logging.info('error when loading library, retry')
     pbar.finish()
+    save_songs(obj.songs)
     print
-    f = open('songs.pickle', 'wb')
-    pickle.dump(obj.songs, f)
-    f.close()
-    f = open('albums.pickle', 'wb')
-    pickle.dump(obj.albums, f)
-    f.close()
 
 # parsers
 
@@ -333,6 +342,7 @@ def get_songs_search(search_string, songs):
 def set_songs_sync(server_params, songs):
     '''Sync playcount and rating'''
     logging.debug('call set_songs_sync')
+    print
     print "Updating songs rating and playcount (could be long)"
     print
     nb_songs = len(songs)
@@ -383,6 +393,7 @@ def set_songs_sync(server_params, songs):
             except KeyError:
                 logging.info('error when loading library, retry')
     pbar.finish()
+    save_songs(songs)
     print
     print "%i song(s) rating updated" % nb_update_rating
     print "%i song(s) playcount updated" % nb_update_playcount
