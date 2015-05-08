@@ -333,13 +333,25 @@ def get_songs_search(search_string, songs):
 def set_songs_sync(server_params, songs):
     '''Sync playcount and rating'''
     logging.debug('call set_songs_sync')
+    print "Updating songs rating and playcount (could be long)"
+    print
     nb_songs = len(songs)
     logging.debug('number of songs: %i', nb_songs)
+    widgets = [
+             'Songs: ', Percentage(),
+             ' ', Bar(marker='#',left='[',right=']'),
+             ' (', Counter(), ' in ' + str(nb_songs) + ') ',
+             ETA()]
+    pbar = ProgressBar(widgets=widgets, maxval=nb_songs)
+    pbar.start()
     limits = range(0, nb_songs, 20)
+    nb_update_rating = 0
+    nb_update_playcount = 0
     if not limits[-1] == nb_songs:
         limits.append(nb_songs)
     for start, end in zip(limits[:-1], limits[1:]):
         logging.info('Processing song %i to %i ...', start, end)
+        pbar.update(start)
         while True:
             try:
                 command = {"jsonrpc": "2.0",
@@ -360,14 +372,21 @@ def set_songs_sync(server_params, songs):
                                 'updating rating for %s!',
                                 r_song['songid'])
                         songs[r_song['songid']]['rating'] = r_song['rating']
+                        nb_update_rating += 1
                     if songs[r_song['songid']]['playcount'] != r_song['playcount']:
                         logging.info(
                                 'updating playcount for %s!',
                                 r_song['songid'])
                         songs[r_song['songid']]['playcount'] = r_song['playcount']
+                        nb_update_playcount += 1
                 break
             except KeyError:
                 logging.info('error when loading library, retry')
+    pbar.finish()
+    print
+    print "%i song(s) rating updated" % nb_update_rating
+    print "%i song(s) playcount updated" % nb_update_playcount
+    print
 
 def echonest_sync(api_key, profile_id, songs):
     '''Sync songs with echonest tasteprofile'''
