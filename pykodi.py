@@ -28,7 +28,6 @@ PROFILE_NAME = 'Kodi library'
 
 #TODO: add instrospect
 #TODO: display number of transactions calls in echonest API
-#TODO: delta for echonest sync
 
 # utility functions
 
@@ -235,7 +234,7 @@ def get_audio_library_from_server(obj):
                 #TODO: improve error catching, limit to API errors
                 logging.info('error when loading library, retry')
     pbar.finish()
-    save_albums(obj.albums)
+    save_songs(obj.songs)
     # Loading albums
     nb_albums = get_nb_albums(obj.kodi_params)
     logging.debug('number of albums: %i', nb_albums)
@@ -276,7 +275,7 @@ def get_audio_library_from_server(obj):
             except KeyError:
                 logging.info('error when loading library, retry')
     pbar.finish()
-    save_songs(obj.songs)
+    save_albums(obj.albums)
     print
 
 # parsers
@@ -402,12 +401,9 @@ def set_songs_sync(server_params, songs):
     print "%i song(s) playcount updated" % nb_update_playcount
     print
 
-def echonest_sync(api_key, profile_id, songs):
-    '''Sync songs with echonest tasteprofile'''
-    logging.debug('call echonest_sync')
-    #TODO: cache the profile ID
-    #TODO: create routines for echonest API calls + HTTP Kodi calls
-    # determine delta
+def get_profile_delta(songs):
+    '''Songs id with echonest rating and playcount not up-to-date'''
+    logging.debug('call get_profile_delta')
     songs_id_delta = []
     for song_id in songs.keys():
         if not songs[song_id]['rating'] == songs[song_id]['rating_en']:
@@ -416,12 +412,26 @@ def echonest_sync(api_key, profile_id, songs):
         if not songs[song_id]['playcount'] == songs[song_id]['playcount_en']:
             songs_id_delta.append(song_id)
             continue
+    return songs_id_delta
+
+def echonest_sync(api_key, profile_id, songs):
+    '''Sync songs with echonest tasteprofile'''
+    logging.debug('call echonest_sync')
+    #TODO: cache the profile ID
+    #TODO: create routines for echonest API calls + HTTP Kodi calls
+    en_info = get_echonest_info(api_key, profile_id)
+    if en_info['total'] == 0:
+        logging.info("no songs in tasteprofile, full sync")
+        songs_delta_id = songs.keys()
+    else:
+        logging.info("limit sync to delta")
+        songs_id_delta = get_profile_delta(songs)
     nb_songs_delta = len(songs_id_delta)
-    logging.info('delta size: %i', nb_songs_delta)
-    logging.debug('delta songs %s', songs_id_delta)
     print
     print "Sync songs to the tasteprofile (this can be very very long)"
     print
+    logging.info('delta size: %i', nb_songs_delta)
+    logging.debug('delta songs %s', songs_id_delta)
     widgets = [
             'Songs: ', Percentage(),
             ' ', Bar(marker='#',left='[',right=']'),
@@ -429,7 +439,6 @@ def echonest_sync(api_key, profile_id, songs):
             ETA()]
     pbar = ProgressBar(widgets=widgets, maxval=nb_songs_delta)
     pbar.start()
-    
     # slicing
     limits = range(0, nb_songs_delta, 30)
     if not limits[-1] == nb_songs_delta:
@@ -491,7 +500,7 @@ def echonest_playlist(api_key, profile_id):
         playlist.append(kodi_id)
     return playlist
 
-def echonest_info(api_key, profile_id):
+def get_echonest_info(api_key, profile_id):
     '''Display info about echonest profile'''
     logging.debug('call echonest_info')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
@@ -499,15 +508,10 @@ def echonest_info(api_key, profile_id):
               "id": profile_id
               }
     r = requests.get(url, params=payload)
-    print(r.url)
-    print(r.text)
-    url = 'http://developer.echonest.com/api/v4/tasteprofile/read'
-    payload = {"api_key": api_key,
-              "id": profile_id
-              }
-    r = requests.get(url, params=payload)
-    print(r.url)
-    print(r.text)
+    logging.debug('URL: %s', r.url)
+    logging.debug('return: %s', r.text)
+    ret = r.json()
+    return ret['response']['catalog']
 
 def echonest_delete(api_key, profile_id):
     '''Delete echonest tasteprofile'''
@@ -1036,7 +1040,7 @@ class KodiRemote(cmd.Cmd):
             echonest taste profile. The current playlist
             is removed before.
         '''
-        logging.debug('call function do_playlist_add')
+        logging.debug('call function do_playlist_tasteprofile')
         profile_id = get_profile_id(self.api_key)
         songids = echonest_playlist(self.api_key, profile_id)
         playlist_clear(self.kodi_params)
@@ -1123,7 +1127,11 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_echonest_info')
         profile_id = get_profile_id(self.api_key)
-        echonest_info(self.api_key, profile_id)
+        en_info = get_echonest_info(self.api_key, profile_id)
+        #TODO: create disp function
+        print
+        print en_info
+        print
 
     def do_echonest_delete(self, line):
         '''
