@@ -500,6 +500,18 @@ def echonest_playlist(api_key, profile_id):
         playlist.append(kodi_id)
     return playlist
 
+def set_echonest_favorite(api_key, profile_id, song_id):
+    '''Make a song favorite in echonest tasteprofile'''
+    logging.debug('call set_echonest_favorite')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/favorite'
+    payload = {"api_key": api_key,
+              "id": profile_id,
+              "item": str(song_id)
+              }
+    r = requests.get(url, params=payload)
+    logging.debug('URL: %s', r.url)
+    logging.debug('return: %s', r.text)
+
 def get_echonest_info(api_key, profile_id):
     '''Display info about echonest profile'''
     logging.debug('call echonest_info')
@@ -1108,6 +1120,16 @@ class KodiRemote(cmd.Cmd):
         items = playlist_get_items(self.kodi_params)
         disp_now_playing(item, properties)
         disp_next_playing(properties, items)
+
+    def do_play_favorite(self, line):
+        '''
+        Like the current song (in your echonest tasteprofile)
+        Usage: play_favorite
+        '''
+        logging.debug('call function do_play_favorite')
+        item = get_item(self.kodi_params)
+        profile_id = get_profile_id(self.api_key)
+        set_echonest_favorite(self.api_key, profile_id, item['id'])
 
     # echonest functions
 
