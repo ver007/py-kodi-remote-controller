@@ -525,6 +525,21 @@ def get_echonest_info(api_key, profile_id):
     ret = r.json()
     return ret['response']['catalog']
 
+def get_echonest_read(api_key, profile_id, item_id):
+    '''Display dat about a given item'''
+    logging.debug('call echonest_read')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/read'
+    payload = {
+            'api_key': api_key,
+            'id': profile_id,
+            'item_id': str(item_id)
+            }
+    r = requests.get(url, params=payload)
+    logging.debug('URL: %s', r.url)
+    logging.debug('return: %s', r.text)
+    ret = r.json()
+    return ret['response']['catalog']['items'][0]
+
 def echonest_delete(api_key, profile_id):
     '''Delete echonest tasteprofile'''
     logging.debug('call echonest_delete')
@@ -1153,6 +1168,19 @@ class KodiRemote(cmd.Cmd):
         #TODO: create disp function
         print
         print en_info
+        print
+
+    def do_echonest_read(self, line):
+        '''
+        Display data for a given item.
+        Usage: echonest_read item_id
+        '''
+        logging.debug('call function do_echonest_info')
+        profile_id = get_profile_id(self.api_key)
+        item_id = parse_single_int(line)
+        en_read = get_echonest_read(self.api_key, profile_id, item_id)
+        print
+        print en_read
         print
 
     def do_echonest_delete(self, line):
