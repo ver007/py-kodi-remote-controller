@@ -512,6 +512,18 @@ def set_echonest_favorite(api_key, profile_id, song_id):
     logging.debug('URL: %s', r.url)
     logging.debug('return: %s', r.text)
 
+def set_echonest_skip(api_key, profile_id, song_id):
+    '''Skip a song favorite in echonest taste profile'''
+    logging.debug('call set_echonest_skip')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/skip'
+    payload = {"api_key": api_key,
+              "id": profile_id,
+              "item": str(song_id)
+              }
+    r = requests.get(url, params=payload)
+    logging.debug('URL: %s', r.url)
+    logging.debug('return: %s', r.text)
+
 def get_echonest_info(api_key, profile_id):
     '''Display info about echonest profile'''
     logging.debug('call echonest_info')
@@ -556,6 +568,7 @@ def echonest_delete(api_key, profile_id):
 
 def playlist_get_items(server_params):
     '''Get all items from the audio playlist'''
+    #TODO: change to return the item id only
     logging.debug('call playlist_get_items')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.GetItems",
@@ -578,6 +591,7 @@ def playlist_get_items(server_params):
 
 def get_item(server_params):
     '''Get the current played item'''
+    #TODO: change to return item id only
     logging.debug('call function get_item')
     command = {"jsonrpc": "2.0",
             "method": "Player.GetItem",
@@ -757,6 +771,18 @@ def player_stop(server_params):
             "method": "Player.Stop",
             "params": {
                 "playerid": 0 },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+
+def player_goto(server_params):
+    '''Go to the next item'''
+    logging.debug('call function player_goto')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.GoTo",
+            "params":{
+                "playerid": 0,
+                "to": 'next'},
             "id": 1}
     ret = call_api(server_params, command)
     display_result(ret)
@@ -1145,6 +1171,17 @@ class KodiRemote(cmd.Cmd):
         item = get_item(self.kodi_params)
         profile_id = get_profile_id(self.api_key)
         set_echonest_favorite(self.api_key, profile_id, item['id'])
+    
+    def do_play_skip(self, line):
+        '''
+        Skip the current song
+        Usage: play_skip
+        '''
+        logging.debug('call function do_play_skip')
+        item = get_item(self.kodi_params)
+        profile_id = get_profile_id(self.api_key)
+        player_goto(self.kodi_params)
+        set_echonest_skip(self.api_key, profile_id, item['id'])
 
     # echonest functions
 
