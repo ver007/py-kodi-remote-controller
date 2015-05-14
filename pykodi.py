@@ -789,12 +789,13 @@ class KodiRemote(cmd.Cmd):
     def do_echonest_delete(self, line):
         '''
         Delete echonest taste profile.
-        Usage: echonest_info
+        Usage: echonest_delete
         '''
         logging.debug('call function do_echonest_delete')
         profile_id = get_profile_id(self.api_key)
+        if fancy_disp.sure_delete_tasteprofile(self.api_key, profile_id):
         #TODO: insert a validation prompt
-        en_api.echonest_delete(self.api_key, profile_id)
+            en_api.echonest_delete(self.api_key, profile_id)
 
     def do_EOF(self, line):
         '''Override end of file'''

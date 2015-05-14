@@ -78,3 +78,15 @@ def playlist(properties, tracks):
     else:
         print "[playlist empty]"
     print
+
+# prompt for confirmation
+
+def sure_delete_tasteprofile(api_key, profile_id):
+    '''Warning before taste profile deletion.'''
+    print
+    print "WARNING: you are about to delete your taste profile. All your"
+    print "favorite, ban and skip data will be lost. playcount and rating"
+    print "data are safe in your Kodi library."
+    print
+    rep = raw_input("Are you sure (Y/c)? ")
+    return rep == 'Y'
