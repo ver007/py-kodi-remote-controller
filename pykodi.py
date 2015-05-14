@@ -505,10 +505,7 @@ class KodiRemote(cmd.Cmd):
         # customize prompt
         sys_name = kodi_api.system_friendly_name(self.kodi_params)
         self.prompt = "(" + sys_name + ") "
-        # welcome message
-        print
-        print "For a quick start, try play_album"
-        print
+        fancy_disp.smart_help()
 
     # albums functions
 

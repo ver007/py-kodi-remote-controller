@@ -90,3 +90,12 @@ def sure_delete_tasteprofile(api_key, profile_id):
     print
     rep = raw_input("Are you sure (Y/c)? ")
     return rep == 'Y'
+
+# stub for smart help
+
+def smart_help():
+    '''Help messages that make sense.'''
+    # welcome message
+    print
+    print "For a quick start, try play_album"
+    print
