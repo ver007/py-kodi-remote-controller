@@ -73,6 +73,36 @@ def display_result(ret):
     else:
         logging.info('command processed successfully')
 
+# audiolibrary
+
+def audiolibrary_get_albums(server_params, album_id_start, album_id_end):
+    '''Retrieve all albums whithin limits'''
+    command = {"jsonrpc": "2.0",
+            "method": "AudioLibrary.GetAlbums",
+            "params": {
+                "limits": {
+                    "start": album_id_start,
+                    "end": album_id_end } 
+                },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+    return ret['result']
+
+def audiolibrary_get_songs(server_params, song_id_start, song_id_end):
+    '''Retrieve all songs whithin limits'''
+    command = {"jsonrpc": "2.0",
+            "method": "AudioLibrary.GetSongs",
+            "params": {
+                "limits": {
+                    "start": song_id_start,
+                    "end": song_id_end }
+                },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+    return ret['result']
+
 # playlist
 
 def playlist_add(item_type, item_id, server_params):

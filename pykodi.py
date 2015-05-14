@@ -135,7 +135,8 @@ def get_audio_library_from_server(obj):
     print "Loading the Kodi server library, this may be very long"
     print
     # Loading songs
-    nb_songs = get_nb_songs(obj.kodi_params)
+    songs_dummy = kodi_api.audiolibrary_get_songs(obj.kodi_params, 0, 1)
+    nb_songs = songs_dummy['limits']['total']
     logging.debug('number of songs: %i', nb_songs)
     obj.nb_songs = nb_songs
     widgets = [
@@ -169,7 +170,7 @@ def get_audio_library_from_server(obj):
                                 "start": start, 
                                 "end": end } },
                         "id": 1}
-                ret = call_api(obj.kodi_params, command)
+                ret = kodi_api.call_api(obj.kodi_params, command)
                 for song in ret['result']['songs']:
                     obj.songs[song['songid']] = {}
                     obj.songs[song['songid']]['title'] = song['title']
@@ -190,7 +191,8 @@ def get_audio_library_from_server(obj):
     pbar.finish()
     save_songs(obj.songs)
     # Loading albums
-    nb_albums = get_nb_albums(obj.kodi_params)
+    albums_dummy = kodi_api.audiolibrary_get_albums(obj.kodi_params, 0, 1)
+    nb_albums = albums_dummy['limits']['total']
     logging.debug('number of albums: %i', nb_albums)
     obj.nb_albums = nb_albums
     widgets = [
@@ -220,7 +222,7 @@ def get_audio_library_from_server(obj):
                                 "start": start, 
                                 "end": end } },
                         "id": 1}
-                ret = call_api(obj.kodi_params, command)
+                ret = kodi_api.call_api(obj.kodi_params, command)
                 for album in ret['result']['albums']:
                     obj.albums[album['albumid']] = {}
                     obj.albums[album['albumid']]['title'] = album['title']
