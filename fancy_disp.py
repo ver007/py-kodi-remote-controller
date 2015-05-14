@@ -26,7 +26,7 @@ def albums_index(albums_id, kodi_albums):
     print "Total number of albums: %i" % len(kodi_albums)
     print
 
-def disp_songs_index(songs_id, kodi_songs):
+def songs_index(songs_id, kodi_songs):
     '''Display songs list from internal index'''
     logging.debug('call disp_songs_index')
     print
@@ -41,7 +41,7 @@ def disp_songs_index(songs_id, kodi_songs):
     print "Total number of songs: %i" % len(kodi_songs)
     print
 
-def disp_songs_details(song_id, kodi_songs):
+def songs_details(song_id, kodi_songs):
     '''Display song details from song id'''
     logging.debug('call disp_songs_details')
     print
@@ -78,6 +78,40 @@ def playlist(properties, tracks):
     else:
         print "[playlist empty]"
     print
+
+def now_playing(item, properties):
+    '''Display the now playing part of display_what'''
+    print
+    #TODO: merge somehow with songs_display 
+    if item:
+        disp_rating = '.....'
+        for i in range(item['rating']):
+            disp_rating[i] = '*'
+            print 'Now Playing:'
+            print
+            print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
+            print "   %s - [%s]" % (item['title'], disp_rating)
+            print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
+                    properties['time']['hours'],
+                    properties['time']['minutes'],
+                    properties['time']['seconds'],
+                    properties['totaltime']['hours'],
+                    properties['totaltime']['minutes'],
+                    properties['totaltime']['seconds'],
+                    properties['percentage'] )
+        else:
+            print "[not playing anything]"
+
+def next_playing(properties, items):
+    '''Display the next playing part of display_what'''
+    print
+    if properties:
+        print "(%i / %i) - Next: %s - %s" % (
+                properties['position'] + 1,
+                len(items),
+                items[properties['position'] + 1]['artist'][0],
+                items[properties['position'] + 1]['title'] )
+        print
 
 # prompt for confirmation
 

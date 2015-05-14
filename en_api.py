@@ -13,6 +13,7 @@ Module of functions for echonest API management.
 import requests
 import logging
 
+#TODO: rename to tasteprofile in place of echonest
 def echonest_favorite(api_key, profile_id, song_id):
     '''Make a song favorite in echonest tasteprofile'''
     logging.debug('call set_echonest_favorite')

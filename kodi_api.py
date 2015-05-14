@@ -133,7 +133,7 @@ def player_get_active(server_params):
             }
     ret = call_api(server_params, command)
     display_result(ret)
-    return 'result' in ret
+    return ret['result']
 
 def player_get_item(server_params):
     '''Get the current played item'''
@@ -157,18 +157,6 @@ def player_get_item(server_params):
     else:
         return None
 
-def player_play_pause(server_params):
-    '''Pauses or unpause playback and returns the new state'''
-    logging.debug('call function player_play_pause')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.PlayPause",
-            "params": {
-                "playerid": 0,
-                },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
 def player_get_properties(server_params):
     '''Get properties of the played item'''
     logging.debug('call function player_get_properties')
@@ -190,6 +178,67 @@ def player_get_properties(server_params):
         logging.debug('no properties found, player not active')
         result = None
     return result
+
+def player_goto(server_params):
+    '''Go to the next item'''
+    logging.debug('call function player_goto')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.GoTo",
+            "params":{
+                "playerid": 0,
+                "to": 'next'},
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+
+def player_open(server_params):
+    '''Open the audio playlist'''
+    logging.debug('call function player_open')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Open",
+            "params": {
+                "item": {
+                    "playlistid": 0 } 
+                },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+
+def player_open_party(server_params):
+    '''Open the audio player in partymode'''
+    logging.debug('call function player_open_party')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Open",
+            "params": {
+                "item": {
+                    "partymode": "music" }
+                },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+
+def player_play_pause(server_params):
+    '''Pauses or unpause playback'''
+    logging.debug('call function player_play_pause')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.PlayPause",
+            "params": {
+                "playerid": 0,
+                },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+
+def player_stop(server_params):
+    '''Stop playback'''
+    logging.debug('call function player_stop')
+    command = {"jsonrpc": "2.0",
+            "method": "Player.Stop",
+            "params": {
+                "playerid": 0 },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
 
 # system
 

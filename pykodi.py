@@ -333,7 +333,7 @@ def set_songs_sync(server_params, songs):
                                 "start": start, 
                                 "end": end } },
                         "id": 1}
-                ret = call_api(server_params, command)
+                ret = kodi_api.call_api(server_params, command)
                 for r_song in ret['result']['songs']:
                     if songs[r_song['songid']]['rating'] != r_song['rating']:
                         logging.info(
@@ -375,10 +375,10 @@ def echonest_sync(api_key, profile_id, songs):
     logging.debug('call echonest_sync')
     #TODO: cache the profile ID
     #TODO: create routines for echonest API calls + HTTP Kodi calls
-    en_info = get_echonest_info(api_key, profile_id)
+    en_info = en_api.echonest_info(api_key, profile_id)
     if en_info['total'] == 0:
         logging.info("no songs in tasteprofile, full sync")
-        songs_delta_id = songs.keys()
+        songs_id_delta = songs.keys()
     else:
         logging.info("limit sync to delta")
         songs_id_delta = get_profile_delta(songs)
@@ -400,11 +400,12 @@ def echonest_sync(api_key, profile_id, songs):
     if not limits[-1] == nb_songs_delta:
         limits.append(nb_songs_delta)
     for start, end in zip(limits[:-1], limits[1:]):
-        logging.info('Processing song %i to %i ...', start, end)
+        logging.info('Processing song index from  %i to %i ...', start, end)
         pbar.update(start)
         command = []
-        songs_id_slice = range(start, end)
-        for song_id in songs_id_delta:
+        songs_index_slice = range(start, end)
+        for song_index in songs_index_slice:
+            song_id = songs_id_delta[song_index]
             rating = songs[song_id]['rating'] * 2
             mb_song_id = 'musicbrainz:song:' + songs[song_id]['musicbrainztrackid']
             #TODO: use API function
@@ -417,6 +418,7 @@ def echonest_sync(api_key, profile_id, songs):
                     "play_count": songs[song_id]['playcount']
                     }
                 })
+
             songs[song_id]['rating_en'] = songs[song_id]['rating']
             songs[song_id]['playcount_en'] = songs[song_id]['playcount']
         url = 'http://developer.echonest.com/api/v4/tasteprofile/update'
@@ -573,7 +575,7 @@ class KodiRemote(cmd.Cmd):
         songs_pos = range(
                 (page_nb - 1) * DISPLAY_NB_LINES + 1,
                 page_nb * DISPLAY_NB_LINES + 1)
-        disp_songs_index(songs_pos, self.songs)
+        fancy_disp.songs_index(songs_pos, self.songs)
 
     def do_songs_display(self, line):
         '''
@@ -584,7 +586,7 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_song_display')
         song_id = parse_single_int(line)
-        disp_songs_details(song_id, self.songs)
+        fancy_disp.songs_details(song_id, self.songs)
     
     def do_songs_search(self, line):
         '''
@@ -595,7 +597,7 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_songs_search')
         search_string = line.lower()
         songs_pos = get_songs_search(search_string, self.songs)
-        disp_songs_index(songs_pos, self.songs)
+        fancy_disp.songs_index(songs_pos, self.songs)
 
     def do_songs_sync(self, line):
         '''
@@ -680,9 +682,9 @@ class KodiRemote(cmd.Cmd):
             album_id = self.albums.keys()[album_index]
             print "Album %i will be played" % album_id
             print
-        playlist_clear(self.kodi_params)
-        playlist_add(album_id, self.kodi_params)
-        player_open(self.kodi_params)
+        kodi_api.playlist_clear(self.kodi_params)
+        kodi_api.playlist_add(ALBUM, album_id, self.kodi_params)
+        kodi_api.player_open(self.kodi_params)
 
     def do_play_party(self, line):
         '''
@@ -690,7 +692,7 @@ class KodiRemote(cmd.Cmd):
         Usage: play_party
         '''
         logging.debug('call function do_play_party')
-        player_open_party(self.kodi_params)
+        kodi_api.player_open_party(self.kodi_params)
 
     def do_play_pause(self, line):
         '''
@@ -711,7 +713,7 @@ class KodiRemote(cmd.Cmd):
             Stop the music and go home, I repeat, stop the music and go home.
         '''
         logging.debug('call function do_play_stop')
-        player_stop(self.kodi_params)
+        kodi_api.player_stop(self.kodi_params)
 
     def do_play_what(self, line):
         '''
@@ -719,11 +721,11 @@ class KodiRemote(cmd.Cmd):
         Usage: play_what
         '''
         logging.debug('call function do_play_what')
-        item = get_item(self.kodi_params)
-        properties = get_properties(self.kodi_params)
-        items = playlist_get_items(self.kodi_params)
-        disp_now_playing(item, properties)
-        disp_next_playing(properties, items)
+        item = kodi_api.player_get_item(self.kodi_params)
+        properties = kodi_api.player_get_properties(self.kodi_params)
+        items = kodi_api.playlist_get_items(self.kodi_params)
+        fancy_disp.now_playing(item, properties)
+        fancy_disp.next_playing(properties, items)
 
     def do_play_favorite(self, line):
         '''
@@ -731,9 +733,9 @@ class KodiRemote(cmd.Cmd):
         Usage: play_favorite
         '''
         logging.debug('call function do_play_favorite')
-        item = get_item(self.kodi_params)
+        item = kodi_api.player_get_item(self.kodi_params)
         profile_id = get_profile_id(self.api_key)
-        set_echonest_favorite(self.api_key, profile_id, item['id'])
+        en_api.echonest_favorite(self.api_key, profile_id, item['id'])
     
     def do_play_skip(self, line):
         '''
@@ -741,10 +743,10 @@ class KodiRemote(cmd.Cmd):
         Usage: play_skip
         '''
         logging.debug('call function do_play_skip')
-        item = get_item(self.kodi_params)
+        item = kodi_api.player_get_item(self.kodi_params)
         profile_id = get_profile_id(self.api_key)
-        player_goto(self.kodi_params)
-        set_echonest_skip(self.api_key, profile_id, item['id'])
+        kodi_api.player_goto(self.kodi_params)
+        en_api.echonest_skip(self.api_key, profile_id, item['id'])
 
     # echonest functions
 
