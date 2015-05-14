@@ -9,6 +9,10 @@
 Kodi remote controller based on HTTP/TCP transport, JSON and using the (cmd) interface.
 '''
 
+import kodi_api
+import en_api
+import fancy_disp
+
 import socket
 import requests
 import json
@@ -25,6 +29,8 @@ import argparse
 BUFFER_SIZE = 1024
 DISPLAY_NB_LINES = 10
 PROFILE_NAME = 'Kodi library'
+ALBUM = 'albumid'
+SONG = 'songid'
 
 #TODO: add instrospect
 #TODO: display number of transactions calls in echonest API
@@ -59,67 +65,16 @@ def get_pykodi_params():
     server_params['port'] = args.port
     server_params['user'] = args.user
     server_params['password'] = args.password
-    return server_params, args.echonest_key, args.verbosity
-
-# API call management
-
-def call_api(server_params, command):
-    if server_params['tcp']:
-        ret = call_api_tcp(
-                server_params['ip'], 
-                server_params['port'],
-                command)
+    if args.verbosity == 2:
+        logging.basicConfig(level=logging.DEBUG)
     else:
-        ret = call_api_http(server_params, command)
-    return ret
+        if args.verbosity == 1:
+            logging.basicConfig(level=logging.INFO)
+    logging.info('Kodi controller started in verbosity mode ...')
+    logging.debug('... and even in high verbosity mode!')
+    return server_params, args.echonest_key
 
-def call_api_http(server_params, command):
-    logging.debug('call call_api_http')
-    logging.debug('command: %s', command)
-    kodi_url = 'http://' + server_params['ip'] +  ':' + str(server_params['port']) + '/jsonrpc'
-    headers = {'Content-Type': 'application/json'}
-    r = requests.post(
-            kodi_url,
-            data=json.dumps(command),
-            headers=headers,
-            auth=(server_params['user'], server_params['password']))
-    ret = r.json()
-    logging.debug('url: %s', r.url)
-    logging.debug('status code: %s', r.status_code)
-    logging.debug('text: %s', r.text)
-    return ret
-
-def call_api_tcp(ip, port, command):
-    '''Send the command using TCP'''
-    s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    s.connect((ip, port))
-    logging.debug('command: %s', command)
-    s.send(json.dumps(command))
-    data = ''
-    while True:
-        filler = s.recv(BUFFER_SIZE)
-        logging.debug('data received: %s', filler)
-        logging.debug('length of the filler: %i', len(filler))
-        data += filler
-        nb_open_brackets = data.count('{') - data.count('}')
-        logging.debug('number of open brackets: %i', nb_open_brackets)
-        if nb_open_brackets == 0:
-            break
-        else:
-            logging.info('api reception incomplete')
-    s.close()
-    logging.debug('data length: %i', len(data))
-    ret = json.loads(data)
-    logging.debug('return: %s', ret)
-    return ret
-
-def display_result(ret):
-    '''Display command result for simple methods'''
-    logging.debug('call display_result')
-    if 'error' in ret:
-        logging.error('too bad, something went wrong')
-    else:
-        logging.info('command processed successfully')
+# local files
 
 def is_file(fname):
     '''Return false if the file does not exist'''
@@ -129,8 +84,6 @@ def is_file(fname):
     except IOError:
         return False
     return True
-
-# local files
 
 def is_library_files():
     '''Check if there are library local files'''
@@ -200,6 +153,7 @@ def get_audio_library_from_server(obj):
         pbar.update(start)
         while True:
             try:
+                #TODO: use an API function
                 command = {"jsonrpc": "2.0",
                         "method": "AudioLibrary.GetSongs",
                          "params": {
@@ -254,6 +208,7 @@ def get_audio_library_from_server(obj):
         pbar.update(start)
         while True:
             try:
+                #TODO: use an API function
                 command = {"jsonrpc": "2.0",
                         "method": "AudioLibrary.GetAlbums",
                          "params": {
@@ -365,6 +320,7 @@ def set_songs_sync(server_params, songs):
         logging.info('Processing song %i to %i ...', start, end)
         pbar.update(start)
         while True:
+            #TODO: use an API function
             try:
                 command = {"jsonrpc": "2.0",
                         "method": "AudioLibrary.GetSongs",
@@ -451,6 +407,7 @@ def echonest_sync(api_key, profile_id, songs):
         for song_id in songs_id_delta:
             rating = songs[song_id]['rating'] * 2
             mb_song_id = 'musicbrainz:song:' + songs[song_id]['musicbrainztrackid']
+            #TODO: use API function
             command.append({
                 "action": 'update',
                 "item": {
@@ -482,6 +439,7 @@ def echonest_sync(api_key, profile_id, songs):
 def echonest_playlist(api_key, profile_id):
     '''Create a premium static playlist'''
     logging.debug('call echonest_playlist')
+    #TODO: split in API function + conversion of namespace
     url = 'http://developer.echonest.com/api/v4/playlist/static'
     payload = {"api_key": api_key,
               "type": 'catalog',
@@ -500,400 +458,9 @@ def echonest_playlist(api_key, profile_id):
         playlist.append(kodi_id)
     return playlist
 
-def set_echonest_favorite(api_key, profile_id, song_id):
-    '''Make a song favorite in echonest tasteprofile'''
-    logging.debug('call set_echonest_favorite')
-    url = 'http://developer.echonest.com/api/v4/tasteprofile/favorite'
-    payload = {"api_key": api_key,
-              "id": profile_id,
-              "item": str(song_id)
-              }
-    r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
-
-def set_echonest_skip(api_key, profile_id, song_id):
-    '''Skip a song favorite in echonest taste profile'''
-    logging.debug('call set_echonest_skip')
-    url = 'http://developer.echonest.com/api/v4/tasteprofile/skip'
-    payload = {"api_key": api_key,
-              "id": profile_id,
-              "item": str(song_id)
-              }
-    r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
-
-def get_echonest_info(api_key, profile_id):
-    '''Display info about echonest profile'''
-    logging.debug('call echonest_info')
-    url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
-    payload = {"api_key": api_key,
-              "id": profile_id
-              }
-    r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
-    ret = r.json()
-    return ret['response']['catalog']
-
-def get_echonest_read(api_key, profile_id, item_id):
-    '''Display dat about a given item'''
-    logging.debug('call echonest_read')
-    url = 'http://developer.echonest.com/api/v4/tasteprofile/read'
-    payload = {
-            'api_key': api_key,
-            'id': profile_id,
-            'item_id': str(item_id)
-            }
-    r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
-    ret = r.json()
-    return ret['response']['catalog']['items'][0]
-
-def echonest_delete(api_key, profile_id):
-    '''Delete echonest tasteprofile'''
-    logging.debug('call echonest_delete')
-    url = 'http://developer.echonest.com/api/v4/tasteprofile/delete'
-    headers = {'content-type': 'multipart/form-data'}
-    payload = {"api_key": api_key,
-              "id": profile_id
-              }
-    r = requests.post(url, headers=headers, params=payload)
-    print(r.url)
-    print(r.text)
-
-# getters
-
-def playlist_get_items(server_params):
-    '''Get all items from the audio playlist'''
-    #TODO: change to return the item id only
-    logging.debug('call playlist_get_items')
-    command = {"jsonrpc": "2.0",
-            "method": "Playlist.GetItems",
-            "params": {
-                "playlistid": 0,
-                "properties": [
-                    "title", 
-                    "artist", 
-                    "duration", 
-                    "track"] },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-    tracks = None
-    try:
-        tracks = ret['result']['items']
-    except KeyError:
-        pass
-    return tracks
-
-def get_item(server_params):
-    '''Get the current played item'''
-    #TODO: change to return item id only
-    logging.debug('call function get_item')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.GetItem",
-            "params": {
-                "playerid": 0,
-                "properties": [
-                    "album",
-                    "title",
-                    "artist",
-                    "year",
-                    "rating" ] },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-    item = None
-    try:
-        item = ret['result']['item']
-    except KeyError:
-        pass
-    return item
-
-def get_properties(server_params):
-    '''Get properties of the played item'''
-    logging.debug('call function get_properties')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.GetProperties",
-            "params": {
-                "playerid": 0,
-                "properties": [
-                    "time",
-                    "totaltime",
-                    "percentage",
-                    "position" ] },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-    result = None
-    try:
-        result = ret['result']
-    except KeyError:
-        logging.debug('no properties found, player not active')
-        pass
-    return result
-
-def system_friendly_name(server_params):
-    '''Get the system name and hostname'''
-    command = {"jsonrpc": "2.0",
-            "method": "XBMC.GetInfoLabels",
-            "params": {
-                "labels": ["System.FriendlyName"] },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-    return ret['result']['System.FriendlyName']
-
-def get_nb_songs(server_params):
-    '''Give the total number of songs in the library'''
-    command = {"jsonrpc": "2.0",
-            "method": "AudioLibrary.GetSongs",
-            "params": {
-                "limits": {
-                    "start": 0, 
-                    "end": 1 } },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-    return ret['result']['limits']['total']
-
-def get_nb_albums(server_params):
-    '''Give the total number of albums in the library'''
-    command = {"jsonrpc": "2.0",
-            "method": "AudioLibrary.GetAlbums",
-            "params": {
-                "limits": {
-                    "start": 0, 
-                    "end": 1 } },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-    return ret['result']['limits']['total']
-
-# setters
-
-def playlist_clear(server_params):
-    '''Clear the audio playlist'''
-    logging.debug('call function playlist_clear')
-    command = {"jsonrpc": "2.0",
-            "method": "Playlist.Clear",
-            "params": {
-                "playlistid": 0 },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-def playlist_add(album_id, server_params):
-    '''Add an album to the audio playlist'''
-    logging.debug('call function playlist_add')
-    command = {"jsonrpc": "2.0",
-            "method": "Playlist.Add",
-            "params": {
-                "playlistid": 0,
-                "item": {
-                    "albumid": album_id } },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-def playlist_add_songs(song_ids, server_params):
-    '''Add a list of songs to the audio playlist'''
-    logging.debug('call function playlist_add')
-    for song_id in song_ids:
-        command = {"jsonrpc": "2.0",
-                "method": "Playlist.Add",
-                "params": {
-                    "playlistid": 0,
-                    "item": {
-                        "songid": int(song_id) } },
-                "id": 1}
-        ret = call_api(server_params, command)
-        display_result(ret)
-
-def player_get_active(server_params):
-    '''Returns active audio players (boolean)'''
-    logging.debug('call function playlist_get_active')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.GetActivePlayers",
-            "id": 1,
-            }
-    ret = call_api(server_params, command)
-    display_result(ret)
-    if ret['result']:
-        active = True
-    else:
-        active = False
-    return active
-
-def player_open(server_params):
-    '''Open the audio playlist'''
-    logging.debug('call function player_open')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.Open",
-            "params": {
-                "item": {
-                    "playlistid": 0 } },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-def player_open_party(server_params):
-    '''Open the audio player in partymode'''
-    logging.debug('call function player_open_party')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.Open",
-            "params": {
-                "item": {
-                    "partymode": "music" } },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-def player_play_pause(server_params):
-    '''Pauses or unpause playback and returns the new state'''
-    logging.debug('call function player_play_pause')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.PlayPause",
-            "params": {
-                "playerid": 0,
-                },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-def player_stop(server_params):
-    '''Stops playback'''
-    logging.debug('call function player_stop')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.Stop",
-            "params": {
-                "playerid": 0 },
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-def player_goto(server_params):
-    '''Go to the next item'''
-    logging.debug('call function player_goto')
-    command = {"jsonrpc": "2.0",
-            "method": "Player.GoTo",
-            "params":{
-                "playerid": 0,
-                "to": 'next'},
-            "id": 1}
-    ret = call_api(server_params, command)
-    display_result(ret)
-
-# display function
-
-def disp_albums_index(albums_id, kodi_albums):
-    '''Display albums list from internal index'''
-    logging.debug('call disp_albums_index')
-    print
-    for i, album_id in enumerate(albums_id):
-        print ("%02i. %s by %s (%s) [%i]") % (
-                i + 1,
-                kodi_albums[album_id]['title'],
-                kodi_albums[album_id]['artist'],
-                kodi_albums[album_id]['year'],
-                album_id )
-    print
-    print "Total number of albums: %i" % len(kodi_albums)
-    print
-
-def disp_songs_index(songs_id, kodi_songs):
-    '''Display songs list from internal index'''
-    logging.debug('call disp_songs_index')
-    print
-    for i, song_id in enumerate(songs_id):
-        print ("%02i. %s by %s (%s) [%i]") % (
-                i + 1,
-                kodi_songs[song_id]['title'],
-                kodi_songs[song_id]['artist'],
-                kodi_songs[song_id]['year'],
-                song_id )
-    print
-    print "Total number of songs: %i" % len(kodi_songs)
-    print
-
-def disp_songs_details(song_id, kodi_songs):
-    '''Display song details from song id'''
-    logging.debug('call disp_songs_details')
-    print
-    print ("%s by %s (%s)") % (
-            kodi_songs[song_id]['title'],
-            kodi_songs[song_id]['artist'],
-            kodi_songs[song_id]['year'])
-    print "   Playcount: %i (%i)" % (
-            kodi_songs[song_id]['playcount'],
-            kodi_songs[song_id]['playcount_en'])
-    print "   Rating: %i (%i)" % (
-            kodi_songs[song_id]['rating'],
-            kodi_songs[song_id]['rating_en'])
-    print "   MusicBrainz ID: %s" % kodi_songs[song_id]['musicbrainztrackid']
-    
-    print
-
-def disp_playlist(properties, tracks):
-    '''Display playlist'''
-    if properties:
-        position = properties['position']
-    else:
-        position = -1
-    print
-    if tracks:
-        for i, track in enumerate(tracks):
-            if i == position:
-                print ">> ",
-            else:
-                print "   ",
-            print "%02d. %s - %s" % (
-                    track['track'],
-                    track['artist'][0],
-                    track['title'] )
-    else:
-        print "[playlist empty]"
-    print
-
-def disp_now_playing(item, properties):
-    '''Display the now playing part of display_what'''
-    print
-    #TODO: merge somehow with songs_display 
-    if item:
-        disp_rating = '.....'
-        for i in range(item['rating']):
-            disp_rating[i] = '*'
-        print 'Now Playing:'
-        print
-        print "%s - %s (%s)" % (item['artist'][0], item['album'], item['year'])
-        print "   %s - [%s]" % (item['title'], disp_rating)
-        print "   %02d:%02d:%02d / %02d:%02d:%02d - %i %%" % (
-                properties['time']['hours'],
-                properties['time']['minutes'],
-                properties['time']['seconds'],
-                properties['totaltime']['hours'],
-                properties['totaltime']['minutes'],
-                properties['totaltime']['seconds'],
-                properties['percentage'] )
-    else:
-        print "[not playing anything]"
-
-def disp_next_playing(properties, items):
-    '''Display the next playing part of display_what'''
-    print
-    if properties:
-        print "(%i / %i) - Next: %s - %s" % (
-                properties['position'] + 1, 
-                len(items),
-                items[properties['position'] + 1]['artist'][0],
-                items[properties['position'] + 1]['title'] )
-        print
-
 def get_profile_id(api_key):
     '''Get echonest profile profile ID'''
+    #TODO: split in unit API functions
     logging.debug('call get_profile_id')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
     payload = {
@@ -927,13 +494,7 @@ class KodiRemote(cmd.Cmd):
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.kodi_params, self.api_key, verbosity) = get_pykodi_params()
-        if verbosity == 2:
-            logging.basicConfig(level=logging.DEBUG)
-        elif verbosity == 1:
-            logging.basicConfig(level=logging.INFO)
-        logging.info('Kodi controller started in verbosity mode ...')
-        logging.debug('... and even in high verbosity mode!')
+        (self.kodi_params, self.api_key) = get_pykodi_params()
         # initialize library description
         self.nb_songs = 0
         self.songs = {}
@@ -942,9 +503,10 @@ class KodiRemote(cmd.Cmd):
         # fill data
         get_audio_library(self)
         # customize prompt
-        sys_name = system_friendly_name(self.kodi_params)
+        sys_name = kodi_api.system_friendly_name(self.kodi_params)
         self.prompt = "(" + sys_name + ") "
         # welcome message
+        print
         print "For a quick start, try play_album"
         print
 
@@ -957,7 +519,7 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_albums_random')
         albums_pos = random.sample(xrange(self.nb_albums), DISPLAY_NB_LINES)
-        disp_albums_index(albums_pos, self.albums)
+        fancy_disp.albums_index(albums_pos, self.albums)
 
     def do_albums_page(self, line):
         '''
@@ -973,7 +535,7 @@ class KodiRemote(cmd.Cmd):
         albums_pos = range(
                 (page_nb - 1) * DISPLAY_NB_LINES + 1,
                 page_nb * DISPLAY_NB_LINES + 1)
-        disp_albums_index(albums_pos, self.albums)
+        fancy_disp.albums_index(albums_pos, self.albums)
 
     def do_albums_recent(self, line):
         '''
@@ -984,7 +546,7 @@ class KodiRemote(cmd.Cmd):
         albums_pos = range(
                 self.nb_albums + 1 - DISPLAY_NB_LINES, 
                 self.nb_albums + 1)
-        disp_albums_index(albums_pos, self.albums)
+        fancy_disp.albums_index(albums_pos, self.albums)
 
     def do_albums_search(self, line):
         '''
@@ -994,8 +556,9 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_albums_search')
         search_string = line.lower()
+        #TODO: general refactor to album_ids (pos should not be used)
         albums_pos = get_albums_search(search_string, self.albums)
-        disp_albums_index(albums_pos, self.albums)
+        fancy_disp.albums_index(albums_pos, self.albums)
 
     # songs functions
     
@@ -1054,9 +617,9 @@ class KodiRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
-        properties = get_properties(self.kodi_params)
-        tracks = playlist_get_items(self.kodi_params)
-        disp_playlist(properties, tracks)
+        properties = kodi_api.player_get_properties(self.kodi_params)
+        tracks = kodi_api.playlist_get_items(self.kodi_params)
+        fancy_disp.playlist(properties, tracks)
 
     def do_playlist_add(self, line):
         '''
@@ -1071,10 +634,11 @@ class KodiRemote(cmd.Cmd):
         if not album_id:
             logging.info('no album id provided')
             album_id = random.randrange(self.nb_albums)
+            #TODO: disp function
             print
             print "Album %i will be added to the playlist" % album_id
             print
-        playlist_add(album_id, self.kodi_params)
+        kodi_api.playlist_add(ALBUM, album_id, self.kodi_params)
 
     def do_playlist_clear(self, line):
         '''
@@ -1083,7 +647,7 @@ class KodiRemote(cmd.Cmd):
             Remove all items from the current playlist.
         '''
         logging.debug('call function do_playlist_clear')
-        playlist_clear(self.kodi_params)
+        kodi_api.playlist_clear(self.kodi_params)
 
     def do_playlist_tasteprofile(self, line):
         '''
@@ -1095,9 +659,11 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_playlist_tasteprofile')
         profile_id = get_profile_id(self.api_key)
-        songids = echonest_playlist(self.api_key, profile_id)
-        playlist_clear(self.kodi_params)
-        playlist_add_songs(songids, self.kodi_params)
+        song_ids = echonest_playlist(self.api_key, profile_id)
+        kodi_api.playlist_clear(self.kodi_params)
+        for song_id in song_ids:
+            #TODO: str = dirty, convert song_id to string
+            kodi_api.playlist_add(SONG, int(song_id), self.kodi_params)
 
     # play functions
 
@@ -1136,10 +702,10 @@ class KodiRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        if player_get_active(self.kodi_params):
-            player_play_pause(self.kodi_params)
+        if kodi_api.player_get_active(self.kodi_params):
+            kodi_api.player_play_pause(self.kodi_params)
         else:
-            player_open(self.kodi_params)
+            kodi_api.player_open(self.kodi_params)
 
     def do_play_stop(self, line):
         '''
@@ -1201,7 +767,7 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_echonest_info')
         profile_id = get_profile_id(self.api_key)
-        en_info = get_echonest_info(self.api_key, profile_id)
+        en_info = en_api.echonest_info(self.api_key, profile_id)
         #TODO: create disp function
         print
         print en_info
@@ -1215,7 +781,7 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_echonest_info')
         profile_id = get_profile_id(self.api_key)
         item_id = parse_single_int(line)
-        en_read = get_echonest_read(self.api_key, profile_id, item_id)
+        en_read = en_api.echonest_read(self.api_key, profile_id, item_id)
         print
         print en_read
         print
@@ -1227,7 +793,8 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_echonest_delete')
         profile_id = get_profile_id(self.api_key)
-        echonest_delete(self.api_key, profile_id)
+        #TODO: insert a validation prompt
+        en_api.echonest_delete(self.api_key, profile_id)
 
     def do_EOF(self, line):
         '''Override end of file'''
