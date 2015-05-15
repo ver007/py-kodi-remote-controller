@@ -444,6 +444,8 @@ def echonest_playlist(api_key, profile_id):
     '''Create a premium static playlist'''
     logging.debug('call echonest_playlist')
     #TODO: split in API function + conversion of namespace
+    print
+    print "Requesting a playlist to echonest ..."
     url = 'http://developer.echonest.com/api/v4/playlist/static'
     payload = {"api_key": api_key,
               "type": 'catalog',
@@ -670,6 +672,7 @@ class KodiRemote(cmd.Cmd):
             kodi_api.playlist_clear(self.kodi_params)
             for song_id in song_ids:
                 kodi_api.playlist_add(SONG, song_id, self.kodi_params)
+            kodi_api.player_open_party(self.kodi_params)
         print
 
     # play functions
