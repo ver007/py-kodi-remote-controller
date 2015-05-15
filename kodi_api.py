@@ -270,6 +270,20 @@ def player_stop(server_params):
     ret = call_api(server_params, command)
     display_result(ret)
 
+# application
+
+def player_volume(server_params,volume):
+    '''Volume'''
+    logging.debug('call function player_volume')
+    command = {"jsonrpc": "2.0",
+            "method": "Application.SetVolume",
+            "params": {
+                "volume": volume,
+                },
+            "id": 1}
+    ret = call_api(server_params, command)
+    display_result(ret)
+    
 # system
 
 def system_friendly_name(server_params):
