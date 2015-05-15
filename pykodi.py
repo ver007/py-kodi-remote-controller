@@ -757,17 +757,17 @@ class KodiRemote(cmd.Cmd):
         en_api.echonest_skip(self.api_key, profile_id, item['id'])
 
     # volume control
-        def do_volume(self,percent):
-        '''
-        Set volume in percent
-        Usage: volume 100
-        '''
-        logging.debug('call function do_volume')
-        #TODO percent might not be a number between 0 and 100
-        try:            
-            kodi_api.player_volume(self.kodi_params,int(percent))
-        except:
-            logging.error('Volume must be between 0 and 100.')
+    def do_volume(self,percent):
+       '''
+       Set volume in percent
+       Usage: volume 100
+       '''
+       logging.debug('call function do_volume')
+       #TODO percent might not be a number between 0 and 100
+       try:            
+           kodi_api.player_volume(self.kodi_params,int(percent))
+       except:
+           logging.error('Volume must be between 0 and 100.')
 
     # echonest functions
 
