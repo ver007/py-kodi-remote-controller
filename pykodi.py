@@ -24,6 +24,7 @@ import random
 import cmd
 import logging
 import argparse
+from sys import exit
 
 # global constants
 BUFFER_SIZE = 1024
@@ -58,6 +59,9 @@ def get_pykodi_params():
             help='Increase output verbosity')
     parser.add_argument("-enk", "--echonest-key",
             help='Echonest API key')
+    parser.add_argument("-c", "--command",
+            default=0,
+            help='Execute command and quit.')
     args = parser.parse_args()
     server_params = {}
     server_params['tcp'] = args.tcp
@@ -72,7 +76,7 @@ def get_pykodi_params():
             logging.basicConfig(level=logging.INFO)
     logging.info('Kodi controller started in verbosity mode ...')
     logging.debug('... and even in high verbosity mode!')
-    return server_params, args.echonest_key
+    return server_params, args.echonest_key, args.command
 
 # local files
 
@@ -498,7 +502,7 @@ class KodiRemote(cmd.Cmd):
     
     def preloop(self):
         '''Override and used for class variable'''
-        (self.kodi_params, self.api_key) = get_pykodi_params()
+        (self.kodi_params, self.api_key, self.command) = get_pykodi_params()
         # initialize library description
         self.nb_songs = 0
         self.songs = {}
@@ -506,10 +510,18 @@ class KodiRemote(cmd.Cmd):
         self.albums = {}
         # fill data
         get_audio_library(self)
-        # customize prompt
-        sys_name = kodi_api.system_friendly_name(self.kodi_params)
-        self.prompt = "(" + sys_name + ") "
-        fancy_disp.smart_help()
+        
+        ''' Check if we skip command line and directly execute the passed command'''
+        if self.command!=0:
+            logging.info("Executing custom command")
+            self.onecmd(self.command)                
+            #TODO find out how to detect errors.
+            quit()
+        else:
+            # customize prompt
+            sys_name = kodi_api.system_friendly_name(self.kodi_params)
+            self.prompt = "(" + sys_name + ") "
+            fancy_disp.smart_help()
 
     # albums functions
 
@@ -755,6 +767,19 @@ class KodiRemote(cmd.Cmd):
         profile_id = get_profile_id(self.api_key)
         kodi_api.player_goto(self.kodi_params)
         en_api.echonest_skip(self.api_key, profile_id, item['id'])
+
+    # volume control
+    def do_volume(self,percent):
+       '''
+       Set volume in percent
+       Usage: volume 100
+       '''
+       logging.debug('call function do_volume')
+       #TODO percent might not be a number between 0 and 100
+       try:            
+           kodi_api.player_volume(self.kodi_params,int(percent))
+       except:
+           logging.error('Volume must be between 0 and 100.')
 
     # echonest functions
 
