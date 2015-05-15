@@ -67,14 +67,14 @@ def playlist(properties, tracks):
     print
     if tracks:
         for i, track in enumerate(tracks):
-             if i == position:
-                  print ">> ",
-             else:
-                  print "   ",
-                  print "%02d. %s - %s" % (
-                          track['track'],
-                          track['artist'][0],
-                          track['title'] )
+            if i == position:
+                print ">> ",
+            else:
+                print "   ",
+            print "%02d. %s - %s" % (
+                    track['track'],
+                    track['artist'][0],
+                    track['title'] )
     else:
         print "[playlist empty]"
     print
