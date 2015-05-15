@@ -83,6 +83,7 @@ def now_playing(item, properties):
     '''Display the now playing part of display_what'''
     print
     #TODO: merge somehow with songs_display 
+    print item
     if item:
         disp_rating = '.....'
         for i in range(item['rating']):
