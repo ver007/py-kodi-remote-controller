@@ -496,6 +496,14 @@ def get_profile_id(api_key):
     logging.debug('profile id: %s', profile_id)
     return profile_id
 
+def playback(kodi_params):
+    '''Start playback'''
+    logging.debug('call function playback')
+    if kodi_api.player_get_active(kodi_params):
+        kodi_api.player_play_pause(kodi_params)
+    else:
+        kodi_api.player_open(kodi_params)
+
 # process return messages
 
 class KodiRemote(cmd.Cmd):
@@ -684,7 +692,7 @@ class KodiRemote(cmd.Cmd):
             kodi_api.playlist_clear(self.kodi_params)
             for song_id in song_ids:
                 kodi_api.playlist_add(SONG, song_id, self.kodi_params)
-            kodi_api.player_open_party(self.kodi_params)
+            playback(self.kodi_params)
         print
 
     # play functions
@@ -724,10 +732,7 @@ class KodiRemote(cmd.Cmd):
             Switch to pause if playing, switch to play if in pause.
         '''
         logging.debug('call function do_play_pause')
-        if kodi_api.player_get_active(self.kodi_params):
-            kodi_api.player_play_pause(self.kodi_params)
-        else:
-            kodi_api.player_open(self.kodi_params)
+        playback(self.kodi_params)
 
     def do_play_stop(self, line):
         '''
