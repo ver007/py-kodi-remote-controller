@@ -459,7 +459,7 @@ def echonest_playlist(api_key, profile_id):
     for en_song in en_songs:
         en_id = en_song['foreign_ids'][0]['foreign_id']
         kodi_id = en_id.replace(profile_id + ':song:', "")
-        playlist.append(kodi_id)
+        playlist.append(int(kodi_id))
     return playlist
 
 def get_profile_id(api_key):
@@ -660,11 +660,17 @@ class KodiRemote(cmd.Cmd):
         '''
         logging.debug('call function do_playlist_tasteprofile')
         profile_id = get_profile_id(self.api_key)
-        song_ids = echonest_playlist(self.api_key, profile_id)
-        kodi_api.playlist_clear(self.kodi_params)
-        for song_id in song_ids:
-            #TODO: str = dirty, convert song_id to string
-            kodi_api.playlist_add(SONG, int(song_id), self.kodi_params)
+        while True:
+            song_ids = echonest_playlist(self.api_key, profile_id)
+            fancy_disp.songs_index(song_ids, self.songs)
+            action = fancy_disp.validate_playlist()
+            if action <> 'r':
+                break
+        if action == 'p':
+            kodi_api.playlist_clear(self.kodi_params)
+            for song_id in song_ids:
+                kodi_api.playlist_add(SONG, song_id, self.kodi_params)
+        print
 
     # play functions
 

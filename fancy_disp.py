@@ -10,7 +10,7 @@ Module of display function for PyKodi.
 '''
 
 import logging
-
+#TODO: song_ids and not songs_id + just albums or songs
 def albums_index(albums_id, kodi_albums):
     '''Display albums list from internal index'''
     logging.debug('call disp_albums_index')
@@ -37,9 +37,6 @@ def songs_index(songs_id, kodi_songs):
                 kodi_songs[song_id]['artist'],
                 kodi_songs[song_id]['year'],
                 song_id )
-    print
-    print "Total number of songs: %i" % len(kodi_songs)
-    print
 
 def songs_details(song_id, kodi_songs):
     '''Display song details from song id'''
@@ -114,6 +111,13 @@ def next_playing(properties, items):
         print
 
 # prompt for confirmation
+
+def validate_playlist():
+    '''Request what should be done with a playlist proposal.'''
+    print
+    rep = raw_input(
+            "What now? (P)lay or (R)egenerate? Anything else to cancel: ")
+    return rep.lower()
 
 def sure_delete_tasteprofile(api_key, profile_id):
     '''Warning before taste profile deletion.'''
