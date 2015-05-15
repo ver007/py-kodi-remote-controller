@@ -504,6 +504,14 @@ def playback(kodi_params):
     else:
         kodi_api.player_open(kodi_params)
 
+def populate_playlist(song_ids, kodi_params):
+    '''Create a playlist from an array of song_id'''
+    print
+    print "Populating the playlist... "
+    for song_id in song_ids:
+        kodi_api.playlist_add(SONG, song_id, kodi_params)
+    print "   ... let's rock the house!"
+
 # process return messages
 
 class KodiRemote(cmd.Cmd):
@@ -689,10 +697,10 @@ class KodiRemote(cmd.Cmd):
             if action <> 'r':
                 break
         if action == 'p':
+            kodi_api.player_stop(self.kodi_params)
             kodi_api.playlist_clear(self.kodi_params)
-            for song_id in song_ids:
-                kodi_api.playlist_add(SONG, song_id, self.kodi_params)
-            playback(self.kodi_params)
+            populate_playlist(song_ids, self.kodi_params) 
+            kodi_api.player_open(self.kodi_params)
         print
 
     # play functions
