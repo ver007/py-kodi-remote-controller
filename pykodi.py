@@ -468,6 +468,59 @@ def echonest_playlist(api_key, profile_id):
         playlist.append(int(kodi_id))
     return playlist
 
+def echonest_pl_seed(api_key, profile_id, song_id):
+    '''Create a premium static playlist seeded by a song'''
+    logging.debug('call echonest_pl_song')
+    #TODO: split in API function + conversion of namespace
+    print
+    print "Requesting a playlist to echonest ..."
+    url = 'http://developer.echonest.com/api/v4/playlist/static'
+    en_song_id = profile_id + ':song:' + str(song_id)
+    payload = {"api_key": api_key,
+              "type": 'catalog',
+              "seed_catalog": profile_id,
+              "song_id": en_song_id,
+              "bucket": 'id:' + profile_id
+              }
+    r = requests.get(url, params=payload)
+    logging.debug('URL: %s', r.url)
+    logging.debug('return: %s', r.text)
+    ret = r.json()
+    en_songs = ret['response']['songs']
+    playlist = []
+    for en_song in en_songs:
+        en_id = en_song['foreign_ids'][0]['foreign_id']
+        kodi_id = en_id.replace(profile_id + ':song:', "")
+        playlist.append(int(kodi_id))
+    return playlist
+
+def get_profile_id(api_key):
+    '''Get echonest profile profile ID'''
+    #TODO: split in unit API functions
+    logging.debug('call get_profile_id')
+    url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
+    payload = {
+            'api_key': api_key,
+            'name': PROFILE_NAME}
+    r = requests.get(url, params=payload)
+    if r.status_code == 400:
+        logging.debug('no taste profile found')
+        url = 'http://developer.echonest.com/api/v4/tasteprofile/create'
+        headers = {'content-type': 'multipart/form-data'}
+        payload = {
+                'api_key': api_key,
+                'name': PROFILE_NAME,
+                'type': 'general'}
+        r = requests.post(url, headers=headers, params=payload)
+        ret = r.json()
+        profile_id = ret['response']['id']
+    else:
+        logging.debug('taste profile found')
+        ret = r.json()
+        profile_id = ret['response']['catalog']['id'] 
+    logging.debug('return: %s', r.text)
+    logging.debug('profile id: %s', profile_id)
+    return profile_id
 def get_profile_id(api_key):
     '''Get echonest profile profile ID'''
     #TODO: split in unit API functions
@@ -696,7 +749,7 @@ class KodiRemote(cmd.Cmd):
 
     def do_playlist_tasteprofile(self, line):
         '''
-        Create a playlist from echonest test profile
+        Create a playlist from echonest taste profile
         Usage: playlist_tasteprofile
             Generate and play a new playlist based on
             echonest taste profile. The current playlist
@@ -706,6 +759,31 @@ class KodiRemote(cmd.Cmd):
         profile_id = get_profile_id(self.api_key)
         while True:
             song_ids = echonest_playlist(self.api_key, profile_id)
+            fancy_disp.songs_index(song_ids, self.songs)
+            action = fancy_disp.validate_playlist()
+            if action <> 'r':
+                break
+        if action == 'p':
+            playback_stop(self.kodi_params)
+            kodi_api.playlist_clear(self.kodi_params)
+            populate_playlist(song_ids, self.kodi_params) 
+            kodi_api.player_open(self.kodi_params)
+        print
+
+    def do_playlist_taste_seed(self, line):
+        '''
+        Create a playlist from echonest taste profile and seeded by a song
+        Usage: playlist_tasteprofile song_id
+            Generate and play a new playlist based on
+            echonest taste profile. The current playlist
+            is removed before.
+        '''
+        #TODO: function for a single logic and several pl methods
+        logging.debug('call function do_playlist_tasteprofile')
+        song_id = parse_single_int(line)
+        profile_id = get_profile_id(self.api_key)
+        while True:
+            song_ids = echonest_pl_seed(self.api_key, profile_id, song_id)
             fancy_disp.songs_index(song_ids, self.songs)
             action = fancy_disp.validate_playlist()
             if action <> 'r':
