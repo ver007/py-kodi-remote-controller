@@ -504,6 +504,12 @@ def playback(kodi_params):
     else:
         kodi_api.player_open(kodi_params)
 
+def playback_stop(kodi_params):
+    '''Start playback'''
+    logging.debug('call function playback stop')
+    if kodi_api.player_get_active(kodi_params):
+        kodi_api.player_stop(kodi_params)
+
 def populate_playlist(song_ids, kodi_params):
     '''Create a playlist from an array of song_id'''
     print
@@ -705,7 +711,7 @@ class KodiRemote(cmd.Cmd):
             if action <> 'r':
                 break
         if action == 'p':
-            kodi_api.player_stop(self.kodi_params)
+            playback_stop(self.kodi_params)
             kodi_api.playlist_clear(self.kodi_params)
             populate_playlist(song_ids, self.kodi_params) 
             kodi_api.player_open(self.kodi_params)
@@ -757,7 +763,7 @@ class KodiRemote(cmd.Cmd):
             Stop the music and go home, I repeat, stop the music and go home.
         '''
         logging.debug('call function do_play_stop')
-        kodi_api.player_stop(self.kodi_params)
+        playback_stop(self.kodi_params)
 
     def do_play_what(self, line):
         '''
