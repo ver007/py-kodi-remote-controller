@@ -137,20 +137,18 @@ def playlist_get_items(server_params):
             "method": "Playlist.GetItems",
             "params": {
                 "playlistid": 0,
-                "properties": [
-                    "title", 
-                    "artist", 
-                    "duration", 
-                    "track"] },
+                },
             "id": 1}
     ret = call_api(server_params, command)
     display_result(ret)
-    tracks = None
+    items = []
     try:
-        tracks = ret['result']['items']
+        for item in ret['result']['items']:
+            items.append(item['id'])
+        logging.debug('items in the playlist: %s', items)
     except KeyError:
         pass
-    return tracks
+    return items
 
 # player
 

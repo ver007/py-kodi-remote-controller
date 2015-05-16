@@ -10,6 +10,7 @@ Module of display function for PyKodi.
 '''
 
 import logging
+
 #TODO: song_ids and not songs_id + just albums or songs
 def albums_index(albums_id, kodi_albums):
     '''Display albums list from internal index'''
@@ -55,23 +56,24 @@ def songs_details(song_id, kodi_songs):
     print "   MusicBrainz ID: %s" % kodi_songs[song_id]['musicbrainztrackid']
     print
 
-def playlist(properties, tracks):
+def playlist(properties, song_ids, songs):
     '''Display playlist'''
     if properties:
         position = properties['position']
     else:
         position = -1
     print
-    if tracks:
-        for i, track in enumerate(tracks):
+    if song_ids:
+        for i, song_id in enumerate(song_ids):
             if i == position:
                 print ">> ",
             else:
                 print "   ",
-            print "%02d. %s - %s" % (
-                    track['track'],
-                    track['artist'][0],
-                    track['title'] )
+            print "%s by %s (%s) [%s]" % (
+                    songs[song_id]['artist'],
+                    songs[song_id]['title'],
+                    songs[song_id]['year'],
+                    song_id )
     else:
         print "[playlist empty]"
     print
