@@ -515,12 +515,20 @@ def populate_playlist(song_ids, kodi_params):
 # process return messages
 
 class KodiRemote(cmd.Cmd):
+    
+    def __init__(self,kodi_params=0):
+        # either the commandline options are parsed
+        if kodi_params == 0:
+            (self.kodi_params, self.api_key, self.command) = get_pykodi_params()
+        else:
+            # or the custom server arguments are taken
+            self.kodi_params=kodi_params
+            self.command=0
+        cmd.Cmd.__init__(self)
         
     '''Subclass of the cmd class'''
     
     def preloop(self):
-        '''Override and used for class variable'''
-        (self.kodi_params, self.api_key, self.command) = get_pykodi_params()
         # initialize library description
         self.nb_songs = 0
         self.songs = {}
