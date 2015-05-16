@@ -58,7 +58,11 @@ def echonest_read(api_key, profile_id, item_id):
     payload = {
             'api_key': api_key,
             'id': profile_id,
-            'item_id': str(item_id)
+            'item_id': str(item_id),
+            'bucket': [
+                'artist_discovery', 'artist_familiarity', 'artist_hotttnesss',
+                'song_currency', 'song_hotttnesss', 'song_type',
+                ]
             }
     r = requests.get(url, params=payload)
     logging.debug('URL: %s', r.url)
