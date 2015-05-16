@@ -715,10 +715,10 @@ class KodiRemote(cmd.Cmd):
         Usage: playlist_show
         '''
         logging.debug('call function do_playlist_show')
-        #if kodi_api.player_get_active(self.kodi_params):
-        properties = kodi_api.player_get_properties(self.kodi_params)
-        #else:
-        #    properties = None
+        if kodi_api.player_get_active(self.kodi_params):
+            properties = kodi_api.player_get_properties(self.kodi_params)
+        else:
+            properties = None
         song_ids = kodi_api.playlist_get_items(self.kodi_params)
         fancy_disp.playlist(properties, song_ids, self.songs)
 

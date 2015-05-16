@@ -161,7 +161,12 @@ def player_get_active(server_params):
             }
     ret = call_api(server_params, command)
     display_result(ret)
-    return ret['result']
+    is_active = False
+    for player in ret ['result']:
+        if player['playerid'] == 0:
+            is_active = True
+    logging.debug('active audio player: %s', is_active)
+    return is_active
 
 def player_get_item(server_params):
     '''Get the current played item'''
