@@ -575,14 +575,15 @@ def populate_playlist(song_ids, kodi_params):
 
 class KodiRemote(cmd.Cmd):
     
-    def __init__(self,kodi_params=0):
+    def __init__(self,kodi_params=0,api_key=0,command=0):
         # either the commandline options are parsed
         if kodi_params == 0:
             (self.kodi_params, self.api_key, self.command) = get_pykodi_params()
         else:
             # or the custom server arguments are taken
             self.kodi_params=kodi_params
-            self.command=0
+            self.command=command
+            self.api_key=api_key
         cmd.Cmd.__init__(self)
         
     '''Subclass of the cmd class'''
