@@ -864,9 +864,12 @@ class KodiRemote(cmd.Cmd):
         Usage: play_favorite
         '''
         logging.debug('call function do_play_favorite')
-        item = kodi_api.player_get_item(self.kodi_params)
+        song_id = kodi_api.player_get_item(self.kodi_params)
         profile_id = get_profile_id(self.api_key)
-        en_api.echonest_favorite(self.api_key, profile_id, item['id'])
+        en_api.echonest_favorite(self.api_key, profile_id, song_id)
+        print
+        fancy_disp.favorite(song_id, self.songs)
+        print
     
     def do_play_skip(self, line):
         '''
