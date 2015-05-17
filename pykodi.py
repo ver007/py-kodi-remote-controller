@@ -930,9 +930,9 @@ class KodiRemote(cmd.Cmd):
         logging.debug('call function do_echonest_info')
         profile_id = get_profile_id(self.api_key)
         item_id = parse_single_int(line)
-        en_read = en_api.echonest_read(self.api_key, profile_id, item_id)
+        song_data = en_api.echonest_read(self.api_key, profile_id, item_id)
         print
-        print en_read
+        fancy_disp.echonest_read(song_data)
         print
 
     def do_echonest_delete(self, line):
