@@ -32,7 +32,7 @@ def songs_index(songs_id, kodi_songs):
     logging.debug('call disp_songs_index')
     print
     for i, song_id in enumerate(songs_id):
-        print ("%02i. %s by %s (%s) [%i]") % (
+        print ("%02i. \"%s\" by %s (%s) [%i]") % (
                 i + 1,
                 kodi_songs[song_id]['title'],
                 kodi_songs[song_id]['artist'],
@@ -69,7 +69,8 @@ def playlist(properties, song_ids, songs):
                 print ">> ",
             else:
                 print "   ",
-            print "%s by %s (%s) [%s]" % (
+            print "%02i. \"%s\" by %s (%s) [%s]" % (
+                    i + 1,
                     songs[song_id]['artist'],
                     songs[song_id]['title'],
                     songs[song_id]['year'],
