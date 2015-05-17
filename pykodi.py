@@ -168,7 +168,8 @@ def get_audio_library_from_server(obj):
                                 "year",
                                 "rating",
                                 "playcount",
-                                "musicbrainztrackid"
+                                "musicbrainztrackid",
+                                "genre"
                                 ],
                             "limits": { 
                                 "start": start, 
@@ -185,6 +186,7 @@ def get_audio_library_from_server(obj):
                     obj.songs[song['songid']]['playcount'] = song['playcount']
                     obj.songs[song['songid']][
                             'musicbrainztrackid'] = song['musicbrainztrackid']
+                    obj.songs[song['songid']]['genre'] = song['genre']
                     # store the last update to echonest profile
                     obj.songs[song['songid']]['rating_en'] = 0
                     obj.songs[song['songid']]['playcount_en'] = 0
@@ -301,6 +303,16 @@ def get_songs_search(search_string, songs):
     logging.debug('search result by title: %s', search_result_title)
     logging.debug('search result by artist: %s', search_result_artist)
     return sorted(list(set(search_result_title + search_result_artist)))
+
+def get_genre_search(search_string, songs):
+    '''Internal song indexes for a string search'''
+    search_result_genre = []
+    for song_id in songs.keys():
+        for genre in songs[song_id]['genre']:
+            if search_string.lower() == genre.lower(): #Exact match is wanted, otherwise "Classic" is not distinguishable form "Classic Rock". 
+                search_result_genre.append(song_id)
+    logging.debug('search result by genre: %s', search_result_genre)
+    return sorted(list(search_result_genre))
 
 def set_songs_sync(server_params, songs):
     '''Sync playcount and rating'''
@@ -575,14 +587,15 @@ def populate_playlist(song_ids, kodi_params):
 
 class KodiRemote(cmd.Cmd):
     
-    def __init__(self,kodi_params=0):
+    def __init__(self,kodi_params=0,api_key=0,command=0):
         # either the commandline options are parsed
         if kodi_params == 0:
             (self.kodi_params, self.api_key, self.command) = get_pykodi_params()
         else:
             # or the custom server arguments are taken
             self.kodi_params=kodi_params
-            self.command=0
+            self.command=command
+            self.api_key=api_key
         cmd.Cmd.__init__(self)
         
     '''Subclass of the cmd class'''
@@ -884,6 +897,24 @@ class KodiRemote(cmd.Cmd):
         print
         fancy_disp.skip(song_id, self.songs)
         print
+        
+    def do_play_genre(self,line):
+        '''
+        Start playing songs from specific genre. 
+        Usage: play_genre [genre]
+            The library is search for all songs with playlist is shuffled each time
+        '''
+        logging.debug('call function do_play_genre')
+        song_ids=get_genre_search(line, self.songs)
+        #Listening to the same sequence is bornig, so shuffle the list each time. 
+        random.shuffle(song_ids)
+        #TODO check if result is empty and is really a list
+        kodi_api.playlist_clear(self.kodi_params)
+        #First add only one song and start playback
+        kodi_api.playlist_add(SONG, song_ids[0], self.kodi_params)
+        kodi_api.player_open(self.kodi_params)
+        #Adding the other songs takes very long
+        populate_playlist(song_ids[1:-1],self.kodi_params)
 
     # volume control
     def do_volume(self,percent):
