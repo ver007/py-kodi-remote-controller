@@ -112,6 +112,11 @@ def next_playing(properties, items):
                 items[properties['position'] + 1]['title'] )
         print
 
+def skip(song_id, songs):
+    '''Confirm skip'''
+    print "You just have skipped the song \"%s\" by %s [%i]." % (
+            songs[song_id]['title'], songs[song_id]['artist'], song_id)
+
 # prompt for confirmation
 
 def validate_playlist():

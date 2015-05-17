@@ -176,17 +176,12 @@ def player_get_item(server_params):
             "method": "Player.GetItem",
             "params": {
                 "playerid": 0,
-                "properties": [
-                    "album",
-                    "title",
-                    "artist",
-                    "year",
-                    "rating" ] },
+                },
             "id": 1}
     ret = call_api(server_params, command)
     display_result(ret)
     if 'result' in ret:
-        return ret['result']['item']
+        return ret['result']['item']['id']
     else:
         return None
 

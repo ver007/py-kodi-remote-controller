@@ -874,10 +874,13 @@ class KodiRemote(cmd.Cmd):
         Usage: play_skip
         '''
         logging.debug('call function do_play_skip')
-        item = kodi_api.player_get_item(self.kodi_params)
+        song_id = kodi_api.player_get_item(self.kodi_params)
         profile_id = get_profile_id(self.api_key)
         kodi_api.player_goto(self.kodi_params)
-        en_api.echonest_skip(self.api_key, profile_id, item['id'])
+        en_api.echonest_skip(self.api_key, profile_id, song_id)
+        print
+        fancy_disp.skip(song_id, self.songs)
+        print
 
     # volume control
     def do_volume(self,percent):
