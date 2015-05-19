@@ -123,6 +123,11 @@ def favorite(song_id, songs):
     print "The song \"%s\" by %s [%i] is now a favorite." % (
             songs[song_id]['title'], songs[song_id]['artist'], song_id)
 
+def play_album(album_id, albums):
+    '''Confirm play album'''
+    print "Let's play the album \"%s\" by %s [%i]." % (
+            albums[album_id]['title'], albums[album_id]['artist'], album_id)
+
 def echonest_read(song_data):
     '''Display echonest song data'''
     # clean display
