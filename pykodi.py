@@ -644,9 +644,15 @@ class KodiRemote(cmd.Cmd):
             logging.info('no page number provided')
             page_nb = random.randrange(int(self.nb_albums / 10) + 1)
         albums_pos = range(
-                (page_nb - 1) * DISPLAY_NB_LINES + 1,
-                page_nb * DISPLAY_NB_LINES + 1)
-        fancy_disp.albums_index(albums_pos, self.albums)
+                (page_nb - 1) * DISPLAY_NB_LINES,
+                page_nb * DISPLAY_NB_LINES)
+        logging.debug('albums index range: %s', albums_pos)
+        # clean this conversion
+        album_ids = []
+        for album_pos in albums_pos:
+            album_ids.append(self.albums.keys()[album_pos])
+        logging.debug('albums id range: %s', album_ids)
+        fancy_disp.albums_index(album_ids, self.albums)
 
     def do_albums_recent(self, line):
         '''
@@ -826,6 +832,7 @@ class KodiRemote(cmd.Cmd):
         if not album_id:
             logging.info('no album id provided')
             album_index = random.randrange(self.nb_albums)
+            logging.debug('random album index: %i', album_index)
             album_id = self.albums.keys()[album_index]
         kodi_api.playlist_clear(self.kodi_params)
         kodi_api.playlist_add(ALBUM, album_id, self.kodi_params)
