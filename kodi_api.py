@@ -12,6 +12,7 @@ Module of functions for Kodi API management.
 import requests
 import json
 import logging
+logger = logging.getLogger(__name__)
 
 # API call management
 
@@ -26,8 +27,8 @@ def call_api(server_params, command):
     return ret
 
 def call_api_http(server_params, command):
-    logging.debug('call call_api_http')
-    logging.debug('command: %s', command)
+    logger.debug('call call_api_http')
+    logger.debug('command: %s', command)
     kodi_url = 'http://' + server_params['ip'] +  ':' + str(server_params['port']) + '/jsonrpc'
     headers = {'Content-Type': 'application/json'}
     r = requests.post(
@@ -36,42 +37,42 @@ def call_api_http(server_params, command):
             headers=headers,
             auth=(server_params['user'], server_params['password']))
     ret = r.json()
-    logging.debug('url: %s', r.url)
-    logging.debug('status code: %s', r.status_code)
-    logging.debug('text: %s', r.text)
+    logger.debug('url: %s', r.url)
+    logger.debug('status code: %s', r.status_code)
+    logger.debug('text: %s', r.text)
     return ret
 
 def call_api_tcp(ip, port, command):
     '''Send the command using TCP'''
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     s.connect((ip, port))
-    logging.debug('command: %s', command)
+    logger.debug('command: %s', command)
     s.send(json.dumps(command))
     data = ''
     while True:
         filler = s.recv(BUFFER_SIZE)
-        logging.debug('data received: %s', filler)
-        logging.debug('length of the filler: %i', len(filler))
+        logger.debug('data received: %s', filler)
+        logger.debug('length of the filler: %i', len(filler))
         data += filler
         nb_open_brackets = data.count('{') - data.count('}')
-        logging.debug('number of open brackets: %i', nb_open_brackets)
+        logger.debug('number of open brackets: %i', nb_open_brackets)
         if nb_open_brackets == 0:
             break
         else:
-            logging.info('api reception incomplete')
+            logger.info('api reception incomplete')
     s.close()
-    logging.debug('data length: %i', len(data))
+    logger.debug('data length: %i', len(data))
     ret = json.loads(data)
-    logging.debug('return: %s', ret)
+    logger.debug('return: %s', ret)
 
 def display_result(ret):
     '''Display command result for simple methods'''
-    logging.debug('call display_result')
+    logger.debug('call display_result')
     if 'error' in ret:
-        logging.error('too bad, something went wrong!')
-        logging.error('error message: %s', ret['error']['message'])
+        logger.error('too bad, something went wrong!')
+        logger.error('error message: %s', ret['error']['message'])
     else:
-        logging.info('command processed successfully')
+        logger.info('command processed successfully')
 
 # audiolibrary
 
@@ -107,7 +108,7 @@ def audiolibrary_get_songs(server_params, song_id_start, song_id_end):
 
 def playlist_add(item_type, item_id, server_params):
     '''Add an item to the audio playlist'''
-    logging.debug('call function playlist_add')
+    logger.debug('call function playlist_add')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.Add",
             "params": {
@@ -120,7 +121,7 @@ def playlist_add(item_type, item_id, server_params):
 
 def playlist_clear(server_params):
     '''Clear the audio playlist'''
-    logging.debug('call function playlist_clear')
+    logger.debug('call function playlist_clear')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.Clear",
             "params": {
@@ -132,7 +133,7 @@ def playlist_clear(server_params):
 def playlist_get_items(server_params):
     '''Get all items from the audio playlist'''
     #TODO: change to return the item id only
-    logging.debug('call playlist_get_items')
+    logger.debug('call playlist_get_items')
     command = {"jsonrpc": "2.0",
             "method": "Playlist.GetItems",
             "params": {
@@ -145,7 +146,7 @@ def playlist_get_items(server_params):
     try:
         for item in ret['result']['items']:
             items.append(item['id'])
-        logging.debug('items in the playlist: %s', items)
+        logger.debug('items in the playlist: %s', items)
     except KeyError:
         pass
     return items
@@ -154,7 +155,7 @@ def playlist_get_items(server_params):
 
 def player_get_active(server_params):
     '''Returns active audio players (boolean)'''
-    logging.debug('call function player_get_active')
+    logger.debug('call function player_get_active')
     command = {"jsonrpc": "2.0",
             "method": "Player.GetActivePlayers",
             "id": 1,
@@ -165,13 +166,13 @@ def player_get_active(server_params):
     for player in ret ['result']:
         if player['playerid'] == 0:
             is_active = True
-    logging.debug('active audio player: %s', is_active)
+    logger.debug('active audio player: %s', is_active)
     return is_active
 
 def player_get_item(server_params):
     '''Get the current played item'''
     #TODO: change to return item id only
-    logging.debug('call function get_item')
+    logger.debug('call function get_item')
     command = {"jsonrpc": "2.0",
             "method": "Player.GetItem",
             "params": {
@@ -187,7 +188,7 @@ def player_get_item(server_params):
 
 def player_get_properties(server_params):
     '''Get properties of the played item'''
-    logging.debug('call function player_get_properties')
+    logger.debug('call function player_get_properties')
     command = {"jsonrpc": "2.0",
             "method": "Player.GetProperties",
             "params": {
@@ -203,13 +204,13 @@ def player_get_properties(server_params):
     if 'result' in ret:
         result = ret['result']
     else:
-        logging.debug('no properties found, player not active')
+        logger.debug('no properties found, player not active')
         result = None
     return result
 
 def player_goto(server_params):
     '''Go to the next item'''
-    logging.debug('call function player_goto')
+    logger.debug('call function player_goto')
     command = {"jsonrpc": "2.0",
             "method": "Player.GoTo",
             "params":{
@@ -221,7 +222,7 @@ def player_goto(server_params):
 
 def player_open(server_params):
     '''Open the audio playlist'''
-    logging.debug('call function player_open')
+    logger.debug('call function player_open')
     command = {"jsonrpc": "2.0",
             "method": "Player.Open",
             "params": {
@@ -234,7 +235,7 @@ def player_open(server_params):
 
 def player_open_party(server_params):
     '''Open the audio player in partymode'''
-    logging.debug('call function player_open_party')
+    logger.debug('call function player_open_party')
     command = {"jsonrpc": "2.0",
             "method": "Player.Open",
             "params": {
@@ -247,7 +248,7 @@ def player_open_party(server_params):
 
 def player_play_pause(server_params):
     '''Pauses or unpause playback'''
-    logging.debug('call function player_play_pause')
+    logger.debug('call function player_play_pause')
     command = {"jsonrpc": "2.0",
             "method": "Player.PlayPause",
             "params": {
@@ -259,7 +260,7 @@ def player_play_pause(server_params):
 
 def player_stop(server_params):
     '''Stop playback'''
-    logging.debug('call function player_stop')
+    logger.debug('call function player_stop')
     command = {"jsonrpc": "2.0",
             "method": "Player.Stop",
             "params": {
@@ -272,7 +273,7 @@ def player_stop(server_params):
 
 def player_volume(server_params,volume):
     '''Volume'''
-    logging.debug('call function player_volume')
+    logger.debug('call function player_volume')
     command = {"jsonrpc": "2.0",
             "method": "Application.SetVolume",
             "params": {

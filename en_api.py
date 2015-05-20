@@ -12,48 +12,50 @@ Module of functions for echonest API management.
 
 import requests
 import logging
+logger = logging.getLogger(__name__)
+
 
 #TODO: rename to tasteprofile in place of echonest
 def echonest_favorite(api_key, profile_id, song_id):
     '''Make a song favorite in echonest tasteprofile'''
-    logging.debug('call set_echonest_favorite')
+    logger.debug('call set_echonest_favorite')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/favorite'
     payload = {"api_key": api_key,
               "id": profile_id,
               "item": str(song_id)
               }
     r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
+    logger.debug('URL: %s', r.url)
+    logger.debug('return: %s', r.text)
 
 def echonest_skip(api_key, profile_id, song_id):
     '''Skip a song favorite in echonest taste profile'''
-    logging.debug('call set_echonest_skip')
+    logger.debug('call set_echonest_skip')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/skip'
     payload = {"api_key": api_key,
               "id": profile_id,
               "item": str(song_id)
               }
     r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
+    logger.debug('URL: %s', r.url)
+    logger.debug('return: %s', r.text)
 
 def echonest_info(api_key, profile_id):
     '''Display info about echonest profile'''
-    logging.debug('call echonest_info')
+    logger.debug('call echonest_info')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/profile'
     payload = {"api_key": api_key,
               "id": profile_id
               }
     r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
+    logger.debug('URL: %s', r.url)
+    logger.debug('return: %s', r.text)
     ret = r.json()
     return ret['response']['catalog']
 
 def echonest_read(api_key, profile_id, item_id):
     '''Display dat about a given item'''
-    logging.debug('call echonest_read')
+    logger.debug('call echonest_read')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/read'
     payload = {
             'api_key': api_key,
@@ -65,14 +67,14 @@ def echonest_read(api_key, profile_id, item_id):
                 ]
             }
     r = requests.get(url, params=payload)
-    logging.debug('URL: %s', r.url)
-    logging.debug('return: %s', r.text)
+    logger.debug('URL: %s', r.url)
+    logger.debug('return: %s', r.text)
     ret = r.json()
     return ret['response']['catalog']['items'][0]
 
 def echonest_delete(api_key, profile_id):
     '''Delete echonest tasteprofile'''
-    logging.debug('call echonest_delete')
+    logger.debug('call echonest_delete')
     url = 'http://developer.echonest.com/api/v4/tasteprofile/delete'
     headers = {'content-type': 'multipart/form-data'}
     payload = {"api_key": api_key,

@@ -10,11 +10,13 @@ Module of display function for PyKodi.
 '''
 
 import logging
+logger = logging.getLogger(__name__)
+
 
 #TODO: song_ids and not songs_id + just albums or songs
 def albums_index(albums_id, kodi_albums):
     '''Display albums list from internal index'''
-    logging.debug('call disp_albums_index')
+    logger.debug('call disp_albums_index')
     print
     for i, album_id in enumerate(albums_id):
         print ("%02i. %s by %s (%s) [%i]") % (
@@ -29,7 +31,7 @@ def albums_index(albums_id, kodi_albums):
 
 def songs_index(songs_id, kodi_songs):
     '''Display songs list from internal index'''
-    logging.debug('call disp_songs_index')
+    logger.debug('call disp_songs_index')
     print
     for i, song_id in enumerate(songs_id):
         print ("%02i. \"%s\" by %s (%s) [%i]") % (
@@ -41,7 +43,7 @@ def songs_index(songs_id, kodi_songs):
 
 def songs_details(song_id, kodi_songs):
     '''Display song details from song id'''
-    logging.debug('call disp_songs_details')
+    logger.debug('call disp_songs_details')
     print
     print ("%s by %s (%s)") % (
             kodi_songs[song_id]['title'],
