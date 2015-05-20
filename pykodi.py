@@ -987,6 +987,30 @@ class KodiRemote(cmd.Cmd):
         #TODO: insert a validation prompt
             en_api.echonest_delete(self.api_key, profile_id)
 
+    def do_debug_kavod(self, line):
+        '''
+        Special debug function for Kavod library.
+        Usage: debug_kavod album_id
+        '''
+        print
+        print "Special debug mode for Kavod library"
+        print
+        print "Length of albums array: %i" % len(self.albums)
+        print
+        print "List of IDs: %s" % self.albums.keys()
+        print
+        album_id = parse_single_int(line)
+        ret = kodi_api.audiolibrary_get_albums(
+                self.kodi_params, 
+                album_id - 1, 
+                album_id)
+        print ret
+        print
+        print "In the local library: %s - %s" % (
+                self.albums[album_id]['title'],
+                self.albums[album_id]['artist'])
+        print
+
     def do_EOF(self, line):
         '''Override end of file'''
         logger.info('Bye!')
