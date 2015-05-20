@@ -72,10 +72,10 @@ def get_pykodi_params():
     server_params['user'] = args.user
     server_params['password'] = args.password
     if args.verbosity == 2:
-        logger.basicConfig(level=logger.DEBUG)
+        logging.basicConfig(level=logging.DEBUG)
     else:
         if args.verbosity == 1:
-            logger.basicConfig(level=logger.INFO)
+            logging.basicConfig(level=logging.INFO)
     logger.info('Kodi controller started in verbosity mode ...')
     logger.debug('... and even in high verbosity mode!')
     return server_params, args.echonest_key, args.command
