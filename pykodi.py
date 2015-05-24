@@ -144,6 +144,9 @@ def get_audio_library_from_server(obj):
     songs_dummy = kodi_api.audiolibrary_get_songs(obj.kodi_params, 0, 1)
     nb_songs = songs_dummy['limits']['total']
     logger.debug('number of songs: %i', nb_songs)
+    if nb_songs==0:
+        logger.critical("Library seems to be empty.")
+        exit()
     obj.nb_songs = nb_songs
     widgets = [
         'Songs: ', Percentage(),
