@@ -601,11 +601,6 @@ class KodiRemote(cmd.Cmd):
             self.kodi_params=kodi_params
             self.command=command
             self.api_key=api_key
-        cmd.Cmd.__init__(self)
-        
-    '''Subclass of the cmd class'''
-    
-    def preloop(self):
         # initialize library description
         self.nb_songs = 0
         self.songs = {}
@@ -613,7 +608,11 @@ class KodiRemote(cmd.Cmd):
         self.albums = {}
         # fill data
         get_audio_library(self)
+        cmd.Cmd.__init__(self)
         
+    '''Subclass of the cmd class'''
+    
+    def preloop(self):
         ''' Check if we skip command line and directly execute the passed command'''
         if self.command!=0:
             logger.info("Executing custom command")
