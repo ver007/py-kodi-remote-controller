@@ -919,15 +919,21 @@ class KodiRemote(cmd.Cmd):
         '''
         logger.debug('call function do_play_genre')
         song_ids=get_genre_search(line, self.songs)
-        #Listening to the same sequence is bornig, so shuffle the list each time. 
-        random.shuffle(song_ids)
-        #TODO check if result is empty and is really a list
-        kodi_api.playlist_clear(self.kodi_params)
-        #First add only one song and start playback
-        kodi_api.playlist_add(SONG, song_ids[0], self.kodi_params)
-        kodi_api.player_open(self.kodi_params)
-        #Adding the other songs takes very long
-        populate_playlist(song_ids[1:-1],self.kodi_params)
+        if len(song_ids) >= 1:
+            #Listening to the same sequence is bornig, so shuffle the list each time. 
+            random.shuffle(song_ids)
+            #TODO check if result is empty and is really a list
+            kodi_api.playlist_clear(self.kodi_params)
+            #First add only one song and start playback
+            kodi_api.playlist_add(SONG, song_ids[0], self.kodi_params)
+            kodi_api.player_open(self.kodi_params)
+            #Adding the other songs takes very long
+            if len(song_ids)>=2:
+                populate_playlist(song_ids[1:-1],self.kodi_params)
+            else:
+                logger.info("Genre %s has only one song", line)
+        else:
+            logger.error("Genre %s has no songs", line)
 
     # volume control
     def do_volume(self,percent):
