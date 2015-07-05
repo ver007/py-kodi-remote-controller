@@ -12,18 +12,20 @@ Module of functions for Kodi API management.
 import requests
 import json
 import logging
+
 logger = logging.getLogger(__name__)
 
 # API call management
 
 def call_api(server_params, command):
-    if server_params['tcp']:
-        ret = call_api_tcp(
-                server_params['ip'], 
-                server_params['port'],
-                command)
-    else:
-        ret = call_api_http(server_params, command)
+    #if server_params['tcp']:
+    #    ret = call_api_tcp(
+    #            server_params['ip'], 
+    #            server_params['port'],
+    #            command)
+    #else:
+    #TODO: manage TCP calls
+    ret = call_api_http(server_params, command)
     return ret
 
 def call_api_http(server_params, command):
@@ -295,3 +297,16 @@ def system_friendly_name(server_params):
     ret = call_api(server_params, command)
     display_result(ret)
     return ret['result']['System.FriendlyName']
+
+def jsonrpc_ping(server_params):
+    '''Ping the server'''
+    logger.debug('call function jsonrpc_ping')
+    command = {"jsonrpc": "2.0",
+            "method": "JSONRPC.Ping",
+            "id": 1}
+    try:
+        ret = call_api(server_params, command)
+        display_result(ret)
+        return True
+    except requests.exceptions.ConnectionError:
+        return False
