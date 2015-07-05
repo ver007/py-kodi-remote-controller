@@ -14,6 +14,7 @@ More info on the echonest API: http://developer.echonest.com/docs/v4
 import cmd
 import logging
 import argparse
+import pickle
 
 logger = logging.getLogger(__name__)
 
@@ -58,6 +59,9 @@ def input_params():
 def save_params(params):
     '''Save the Kodi parameters to a local file'''
     logger.debug('call function save_params')
+    f = open('params.pickle', 'wb')
+    pickle.dump(params, f)
+    f.close()
 
 def display_banner():
     '''Display initial banner'''
