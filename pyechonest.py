@@ -63,6 +63,14 @@ def save_params(params):
     pickle.dump(params, f)
     f.close()
 
+def read_params():
+    '''Read the Kodi params from the local file'''
+    logger.debug('call function read_params')
+    f = open('params.pickle', 'rb')
+    params = pickle.load(f)
+    f.close()
+    return params
+
 def display_banner():
     '''Display initial banner'''
     logger.debug('call function display_banner')
@@ -79,6 +87,7 @@ class KodiRemote(cmd.Cmd):
         get_params()
         if is_file('params.pickle'):
             logger.debug('kodi params file found')
+            self.params = read_params()
         else:
             logger.info('no kodi params file')
             print
@@ -94,9 +103,17 @@ class KodiRemote(cmd.Cmd):
         '''
         logger.debug('call function do_params_create')
         print
-        params = input_params()
+        self.params = input_params()
         print
-        save_params(params)
+        save_params(self.params)
+
+    def do_params_display(self, line):
+        '''
+        Display the Kodi params file.
+        Usage: params_display
+        '''
+        logger.debug('call function do_params_display')
+        print self.params
 
     def do_EOF(self, line):
         '''Override end of file'''
