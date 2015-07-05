@@ -113,7 +113,17 @@ class KodiRemote(cmd.Cmd):
         Usage: params_display
         '''
         logger.debug('call function do_params_display')
-        print self.params
+        print
+        print "Kodi parameters:"
+        print "   Network:    %s/%s" % (
+                self.params['ip'], 
+                self.params['port'])
+        print "   Credential: %s (%s)" % (
+                self.params['user'], 
+                self.params['password'])
+        print
+        print "Echonest API key: %s" % self.params['echonest_key']
+        print
 
     def do_EOF(self, line):
         '''Override end of file'''
